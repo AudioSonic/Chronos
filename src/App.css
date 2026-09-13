@@ -1,0 +1,10 @@
+.app-shell {
+  min-height: 100vh;
+  display: flex;
+  background: radial-gradient(circle at 35% 20%, var(--color-background-glow) 0%, var(--color-background) 50%);
+}
+
+.content { flex: 1; min-width: 0; }
+.dashboard-placeholder { padding: 30px 36px; }
+.dashboard-placeholder h1 { font-size: 2.5rem; letter-spacing: -.04em; }
+.dashboard-placeholder p { margin-top: 6px; color: var(--color-text-secondary); }

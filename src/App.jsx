@@ -3,6 +3,7 @@ import './App.css'
 import Sidebar from './Components/Sidebar/Sidebar'
 import ProjectOverview from './Components/ProjectOverview/ProjectOverview'
 import ProjectDetails from './Components/ProjectDetails/ProjectDetails'
+import Dashboard from './Components/Dashboard/Dashboard'
 
 function App() {
   const [activePage, setActivePage] = useState('dashboard')
@@ -18,7 +19,7 @@ function App() {
       <Sidebar activePage={activePage} onNavigate={handleNavigate} />
 
       <main className="content" aria-label="Inhaltsbereich">
-        {activePage === 'projects' && !selectedProject ? <ProjectOverview onOpenProject={setSelectedProject} /> : selectedProject ? <ProjectDetails project={selectedProject} onBack={() => setSelectedProject(null)} /> : <section className="dashboard-placeholder"><h1>Dashboard</h1><p>Wähle „Projekte“, um deine Projekte zu sehen.</p></section>}
+        {activePage === 'projects' && !selectedProject ? <ProjectOverview onOpenProject={setSelectedProject} /> : selectedProject ? <ProjectDetails project={selectedProject} onBack={() => setSelectedProject(null)} /> : <Dashboard />}
       </main>
     </div>
   )

@@ -16,6 +16,7 @@ export type Task = {
   investedSeconds: number
   recurrence?: { frequency: 'daily' | 'weekly' | 'monthly' | 'yearly' | 'custom'; startDate: string; endDate?: string; weekdays?: number[] }
   projectId?: number
+  milestoneId?: number
   dueDate?: string
   plannedForDate?: string
 }
@@ -47,6 +48,7 @@ const formatInvestedTime = (seconds: number) => {
   const safeSeconds = Number.isFinite(seconds) ? Math.max(0, Math.floor(seconds)) : 0
   return `${formatDuration(safeSeconds).slice(0, 5)}h`
 }
+const formatTaskTime = (seconds: number) => `${Math.floor(seconds / 3600).toString().padStart(2, '0')}:${Math.floor(seconds % 3600 / 60).toString().padStart(2, '0')} h`
 
 const dateKey = (date: Date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
 const parseDateKey = (key: string) => { const [year, month, day] = key.split('-').map(Number); return new Date(year, month - 1, day) }
@@ -252,20 +254,20 @@ export default function Dashboard() {
     </header>
 
     <div className="planning-layout">
-      <section className="daily-plan" aria-labelledby="daily-plan-heading">
+      <div className="planning-main-column"><section className="daily-plan" aria-labelledby="daily-plan-heading">
         <div className="plan-heading"><div><span className="calendar-icon" aria-hidden="true"><img src={IconToday} alt="" /></span><h2 id="daily-plan-heading">Tagesplan</h2></div><div className="plan-heading-actions"><div className="day-navigation" aria-label="Tag auswählen"><button type="button" aria-label="Vorheriger Tag" onClick={() => changeSelectedDay(-1)}>‹</button><time dateTime={selectedDay.toISOString().slice(0, 10)}>{shortDateFormatter.format(selectedDay)}</time><button type="button" aria-label="Nächster Tag" onClick={() => changeSelectedDay(1)}>›</button></div><button className="add-task-button" type="button" onClick={() => { setForm({ title: '', date: selectedDateKey, endDate: '', startTime: '08:00', endTime: '09:00', description: '', repeats: false, frequency: 'weekly', weekdays: [] }); setEditingTaskId(null); setIsDialogOpen(true) }}><span>＋</span> Aufgabe hinzufügen</button></div></div>
         <div className="task-list">
           {visibleTasks.length ? visibleTasks.map((task, index) => <article className={`task-card ${task.completed ? 'is-completed' : ''}`} key={task.id}>
             <span className={`task-color task-color-${index % 6}`} />
             <div className="task-time"><time>{task.startTime}</time><time>{task.endTime}</time></div>
-            <div className="task-details"><h3>{task.title}</h3>{task.projectId !== undefined && <p className="project-task-context"><strong>{projectNames.get(task.projectId) || 'Projekt'}</strong>{task.milestoneId !== undefined && milestoneNames.get(task.milestoneId) && <span> · {milestoneNames.get(task.milestoneId)}</span>}</p>}{task.description && <p>{task.description}</p>}</div>
+            <div className="task-details"><h3>{task.title}</h3>{task.projectId !== undefined && <p className="project-task-context"><strong>{projectNames.get(task.projectId) || 'Projekt'}</strong>{task.milestoneId !== undefined && milestoneNames.get(task.milestoneId) && <span> · {milestoneNames.get(task.milestoneId)}</span>}</p>}{task.description && <p>{task.description}</p>}{task.investedSeconds > 0 && <p className="task-time-invested">Investiert: {formatTaskTime(task.investedSeconds)}</p>}</div>
             <button className="work-mode-button" type="button" onClick={() => startWorkMode(task.id)} aria-label={`Work Mode für ${task.title} starten`}>▶ <span>Work Mode starten</span></button>
             <label className="task-checkbox" title={task.completed ? 'Als offen markieren' : 'Als abgeschlossen markieren'}><input type="checkbox" checked={task.completed} onChange={() => toggleTask(task.id)} aria-label={`${task.title} als ${task.completed ? 'offen' : 'abgeschlossen'} markieren`} /><span>✓</span></label>
             <div className="task-options"><button className="task-options-button" type="button" aria-label={`Optionen für ${task.title}`} aria-expanded={openMenuTaskId === task.id} onClick={() => setOpenMenuTaskId((current) => current === task.id ? null : task.id)}>⋮</button>{openMenuTaskId === task.id && <div className="task-options-menu">{task.projectId !== undefined && <button type="button" onClick={() => { removeProjectTaskFromPlan(task.id); setOpenMenuTaskId(null) }}>Aus Tagesplan entfernen</button>}<button type="button" onClick={() => openEditDialog(task)}>Aufgabe bearbeiten</button><button className="danger-option" type="button" onClick={() => removeTask(task.id)}>Aufgabe entfernen</button></div>}</div>
           </article>) : <div className="empty-plan"><span>✦</span><h3>Noch nichts geplant</h3><p>Füge deinen ersten Zeitraum für heute hinzu.</p></div>}
         </div>
-        <ProjectTaskPool tasks={tasks} onPlan={planProjectTask} />
       </section>
+      <ProjectTaskPool tasks={tasks} onPlan={planProjectTask} /></div>
 
       <aside className="planning-sidebar">
         <Calendar selectedDate={selectedDay} onDateSelect={setSelectedDay} />

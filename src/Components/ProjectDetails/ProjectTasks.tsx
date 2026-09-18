@@ -6,6 +6,7 @@ type Milestone = { id: number; title: string; projectId: number }
 const taskKey = 'chronos.tasks'; const milestoneKey = 'chronos.milestones'
 const read = <T,>(key: string): T[] => { try { const value = JSON.parse(localStorage.getItem(key) || '[]'); return Array.isArray(value) ? value : [] } catch { return [] } }
 const emptyForm = { title: '', description: '', dueDate: '', startTime: '08:00', endTime: '09:00', milestoneId: '' }
+const formatTaskTime = (seconds: number) => `${Math.floor(seconds / 3600).toString().padStart(2, '0')}:${Math.floor(seconds % 3600 / 60).toString().padStart(2, '0')} h`
 
 export default function ProjectTasks({ project, onProgress }: { project: Project; onProgress: (completed: number, total: number) => void }) {
   const [tasks, setTasks] = useState<Task[]>(() => read<Task>(taskKey).filter((task) => typeof task.projectId === 'number' && task.projectId === project.id))

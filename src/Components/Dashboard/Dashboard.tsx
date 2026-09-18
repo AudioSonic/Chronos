@@ -1,7 +1,8 @@
-import { FormEvent, type CSSProperties, useEffect, useMemo, useState } from 'react'
+import { FormEvent, type CSSProperties, useEffect, useMemo, useRef, useState } from 'react'
 import "./Dashboard.css"
 import IconCalender from '../../Assets/icon_calender.svg'
 import IconToday from '../../Assets/icon_today.svg'
+import IconFullScreen from '../../Assets/icon full screen.svg'
 
 type Task = {
   id: number
@@ -104,6 +105,8 @@ export default function Dashboard() {
   const [openMenuTaskId, setOpenMenuTaskId] = useState<number | null>(null)
   const [elapsedSeconds, setElapsedSeconds] = useState(0)
   const [isTimerRunning, setIsTimerRunning] = useState(true)
+  const [isTimerFullscreen, setIsTimerFullscreen] = useState(false)
+  const timerPanelRef = useRef<HTMLElement>(null)
   const selectedDateKey = dateKey(selectedDay)
   const visibleTasks = useMemo(() => tasks.filter((task) => task.date === selectedDateKey), [tasks, selectedDateKey])
   const completed = useMemo(() => visibleTasks.filter((task) => task.completed).length, [visibleTasks])
@@ -167,6 +170,21 @@ export default function Dashboard() {
     setElapsedSeconds(0)
   }
 
+  const toggleTimerFullscreen = async () => {
+    if (!timerPanelRef.current) return
+    if (document.fullscreenElement) {
+      await document.exitFullscreen()
+    } else {
+      await timerPanelRef.current.requestFullscreen()
+    }
+  }
+
+  useEffect(() => {
+    const handleFullscreenChange = () => setIsTimerFullscreen(document.fullscreenElement === timerPanelRef.current)
+    document.addEventListener('fullscreenchange', handleFullscreenChange)
+    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange)
+  }, [])
+
   if (activeTask) {
     const plannedSeconds = secondsBetween(activeTask.startTime, activeTask.endTime)
     const timerProgress = plannedSeconds ? Math.min(elapsedSeconds / plannedSeconds * 100, 100) : 0
@@ -174,7 +192,7 @@ export default function Dashboard() {
     return <section className="dashboard work-mode">
       <header className="work-mode-header"><button type="button" onClick={() => closeWorkMode()}>⌂ <span>Dashboard</span></button><span>›</span><strong>Work Mode</strong><time>{formatDate.format(new Date())}</time></header>
       <div className="work-layout">
-        <section className="work-timer-panel"><p className="work-active-label"><i /> WORK MODE AKTIV</p><div className="work-ring" style={{ '--progress': `${timerProgress * 3.6}deg` } as CSSProperties}><div><strong>{formatDuration(elapsedSeconds)} <em>/</em> {formatDuration(plannedSeconds)}</strong><button type="button" aria-label={isTimerRunning ? 'Timer pausieren' : 'Timer fortsetzen'} onClick={() => setIsTimerRunning((running) => !running)}>{isTimerRunning ? 'Ⅱ' : '▶'}</button></div></div><div className="work-actions"><button type="button" onClick={() => setElapsedSeconds(0)}>↻ <span>Timer zurücksetzen</span></button><button type="button" onClick={() => closeWorkMode(true)}>✓ <span>Aufgabe abschließen</span></button><button type="button" onClick={() => closeWorkMode()}>••• <span>Work Mode beenden</span></button></div></section>
+        <section className="work-timer-panel" ref={timerPanelRef}><button className="timer-fullscreen-button" type="button" onClick={toggleTimerFullscreen} aria-label={isTimerFullscreen ? 'Fullscreen verlassen' : 'Timer im Fullscreen öffnen'} title={isTimerFullscreen ? 'Fullscreen verlassen' : 'Fullscreen öffnen'}><img src={IconFullScreen} alt="" /></button><p className="work-active-label"><i /> WORK MODE AKTIV</p><div className="work-ring" style={{ '--progress': `${timerProgress * 3.6}deg` } as CSSProperties}><div><strong>{formatDuration(elapsedSeconds)} <em>/</em> {formatDuration(plannedSeconds)}</strong><button type="button" aria-label={isTimerRunning ? 'Timer pausieren' : 'Timer fortsetzen'} onClick={() => setIsTimerRunning((running) => !running)}>{isTimerRunning ? 'Ⅱ' : '▶'}</button></div></div><div className="work-actions"><button type="button" onClick={() => setElapsedSeconds(0)}>↻ <span>Timer zurücksetzen</span></button><button type="button" onClick={() => closeWorkMode(true)}>✓ <span>Aufgabe abschließen</span></button><button type="button" onClick={() => closeWorkMode()}>••• <span>Work Mode beenden</span></button></div></section>
         <aside className="work-sidebar"><section className="work-info"><h2>Aktueller Task</h2><h3>{activeTask.title}</h3><p>{activeTask.description || 'Keine Beschreibung hinterlegt.'}</p><dl><div><dt>◷ <span>Geplant</span></dt><dd>{activeTask.startTime} – {activeTask.endTime} Uhr ({formatDuration(plannedSeconds).slice(0, 5)}h)</dd></div><div><dt>☷ <span>Status</span></dt><dd>{isTimerRunning ? 'Timer läuft' : 'Pausiert'}</dd></div></dl></section>{nextTask && <section className="next-task"><h2>Nächster Task</h2><strong>{nextTask.title}</strong><p>{nextTask.startTime} – {nextTask.endTime} Uhr</p></section>}</aside>
       </div>
     </section>

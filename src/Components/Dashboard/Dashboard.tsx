@@ -173,6 +173,14 @@ export default function Dashboard() {
     setOpenMenuTaskId(null)
   }
   const activeTask = tasks.find((task) => task.id === activeTaskId)
+  const projectNames = new Map<number, string>()
+  const milestoneNames = new Map<number, string>()
+  try {
+    const projects = JSON.parse(localStorage.getItem('chronos.projects') || '[]') as { id: number; name: string }[]
+    const milestones = JSON.parse(localStorage.getItem('chronos.milestones') || '[]') as { id: number; title: string }[]
+    projects.forEach((project) => projectNames.set(project.id, project.name))
+    milestones.forEach((milestone) => milestoneNames.set(milestone.id, milestone.title))
+  } catch { /* Ungültige optionale Metadaten werden ignoriert. */ }
 
   const changeSelectedDay = (offset: number) => setSelectedDay((current) => {
     const next = new Date(current)
@@ -250,7 +258,7 @@ export default function Dashboard() {
           {visibleTasks.length ? visibleTasks.map((task, index) => <article className={`task-card ${task.completed ? 'is-completed' : ''}`} key={task.id}>
             <span className={`task-color task-color-${index % 6}`} />
             <div className="task-time"><time>{task.startTime}</time><time>{task.endTime}</time></div>
-            <div className="task-details"><h3>{task.title}</h3>{task.description && <p>{task.description}</p>}</div>
+            <div className="task-details"><h3>{task.title}</h3>{task.projectId !== undefined && <p className="project-task-context"><strong>{projectNames.get(task.projectId) || 'Projekt'}</strong>{task.milestoneId !== undefined && milestoneNames.get(task.milestoneId) && <span> · {milestoneNames.get(task.milestoneId)}</span>}</p>}{task.description && <p>{task.description}</p>}</div>
             <button className="work-mode-button" type="button" onClick={() => startWorkMode(task.id)} aria-label={`Work Mode für ${task.title} starten`}>▶ <span>Work Mode starten</span></button>
             <label className="task-checkbox" title={task.completed ? 'Als offen markieren' : 'Als abgeschlossen markieren'}><input type="checkbox" checked={task.completed} onChange={() => toggleTask(task.id)} aria-label={`${task.title} als ${task.completed ? 'offen' : 'abgeschlossen'} markieren`} /><span>✓</span></label>
             <div className="task-options"><button className="task-options-button" type="button" aria-label={`Optionen für ${task.title}`} aria-expanded={openMenuTaskId === task.id} onClick={() => setOpenMenuTaskId((current) => current === task.id ? null : task.id)}>⋮</button>{openMenuTaskId === task.id && <div className="task-options-menu">{task.projectId !== undefined && <button type="button" onClick={() => { removeProjectTaskFromPlan(task.id); setOpenMenuTaskId(null) }}>Aus Tagesplan entfernen</button>}<button type="button" onClick={() => openEditDialog(task)}>Aufgabe bearbeiten</button><button className="danger-option" type="button" onClick={() => removeTask(task.id)}>Aufgabe entfernen</button></div>}</div>

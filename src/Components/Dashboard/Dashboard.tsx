@@ -100,7 +100,7 @@ export default function Dashboard() {
   const [selectedDay, setSelectedDay] = useState(new Date(today.getFullYear(), today.getMonth(), today.getDate()))
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [editingTaskId, setEditingTaskId] = useState<number | null>(null)
-  const [form, setForm] = useState({ title: '', startTime: '08:00', endTime: '09:00', description: '' })
+  const [form, setForm] = useState({ title: '', date: dateKey(selectedDay), startTime: '08:00', endTime: '09:00', description: '' })
   const [activeTaskId, setActiveTaskId] = useState<number | null>(null)
   const [openMenuTaskId, setOpenMenuTaskId] = useState<number | null>(null)
   const [elapsedSeconds, setElapsedSeconds] = useState(0)
@@ -115,12 +115,12 @@ export default function Dashboard() {
   const closeDialog = () => {
     setIsDialogOpen(false)
     setEditingTaskId(null)
-    setForm({ title: '', startTime: '08:00', endTime: '09:00', description: '' })
+    setForm({ title: '', date: dateKey(selectedDay), startTime: '08:00', endTime: '09:00', description: '' })
   }
 
   const openEditDialog = (task: Task) => {
     setEditingTaskId(task.id)
-    setForm({ title: task.title, startTime: task.startTime, endTime: task.endTime, description: task.description })
+    setForm({ title: task.title, date: task.date, startTime: task.startTime, endTime: task.endTime, description: task.description })
     setOpenMenuTaskId(null)
     setIsDialogOpen(true)
   }
@@ -129,8 +129,8 @@ export default function Dashboard() {
     event.preventDefault()
     if (!form.title.trim()) return
     setTasks((current) => {
-      if (editingTaskId !== null) return current.map((task) => task.id === editingTaskId ? { ...task, title: form.title.trim(), description: form.description.trim(), startTime: form.startTime, endTime: form.endTime } : task).sort((a, b) => a.startTime.localeCompare(b.startTime))
-      return [...current, { id: Date.now(), date: selectedDateKey, title: form.title.trim(), description: form.description.trim(), startTime: form.startTime, endTime: form.endTime, completed: false, investedSeconds: 0 }].sort((a, b) => a.startTime.localeCompare(b.startTime))
+      if (editingTaskId !== null) return current.map((task) => task.id === editingTaskId ? { ...task, date: form.date, title: form.title.trim(), description: form.description.trim(), startTime: form.startTime, endTime: form.endTime } : task).sort((a, b) => a.startTime.localeCompare(b.startTime))
+      return [...current, { id: Date.now(), date: form.date, title: form.title.trim(), description: form.description.trim(), startTime: form.startTime, endTime: form.endTime, completed: false, investedSeconds: 0 }].sort((a, b) => a.startTime.localeCompare(b.startTime))
     })
     closeDialog()
   }
@@ -206,7 +206,7 @@ export default function Dashboard() {
 
     <div className="planning-layout">
       <section className="daily-plan" aria-labelledby="daily-plan-heading">
-        <div className="plan-heading"><div><span className="calendar-icon" aria-hidden="true"><img src={IconToday} alt="" /></span><h2 id="daily-plan-heading">Tagesplan</h2></div><div className="plan-heading-actions"><div className="day-navigation" aria-label="Tag auswählen"><button type="button" aria-label="Vorheriger Tag" onClick={() => changeSelectedDay(-1)}>‹</button><time dateTime={selectedDay.toISOString().slice(0, 10)}>{shortDateFormatter.format(selectedDay)}</time><button type="button" aria-label="Nächster Tag" onClick={() => changeSelectedDay(1)}>›</button></div><button className="add-task-button" type="button" onClick={() => setIsDialogOpen(true)}><span>＋</span> Zeitraum hinzufügen</button></div></div>
+        <div className="plan-heading"><div><span className="calendar-icon" aria-hidden="true"><img src={IconToday} alt="" /></span><h2 id="daily-plan-heading">Tagesplan</h2></div><div className="plan-heading-actions"><div className="day-navigation" aria-label="Tag auswählen"><button type="button" aria-label="Vorheriger Tag" onClick={() => changeSelectedDay(-1)}>‹</button><time dateTime={selectedDay.toISOString().slice(0, 10)}>{shortDateFormatter.format(selectedDay)}</time><button type="button" aria-label="Nächster Tag" onClick={() => changeSelectedDay(1)}>›</button></div><button className="add-task-button" type="button" onClick={() => { setForm({ title: '', date: selectedDateKey, startTime: '08:00', endTime: '09:00', description: '' }); setEditingTaskId(null); setIsDialogOpen(true) }}><span>＋</span> Aufgabe hinzufügen</button></div></div>
         <div className="task-list">
           {visibleTasks.length ? visibleTasks.map((task, index) => <article className={`task-card ${task.completed ? 'is-completed' : ''}`} key={task.id}>
             <span className={`task-color task-color-${index % 6}`} />
@@ -231,9 +231,10 @@ export default function Dashboard() {
     </div>
 
     {isDialogOpen && <div className="dialog-backdrop" role="presentation" onMouseDown={closeDialog}><section className="task-dialog" role="dialog" aria-modal="true" aria-labelledby="task-dialog-title" onMouseDown={(event) => event.stopPropagation()}>
-      <div className="dialog-title"><span className="calendar-icon" aria-hidden="true">▣</span><h2 id="task-dialog-title">{editingTaskId === null ? 'Neuen Zeitraum hinzufügen' : 'Aufgabe bearbeiten'}</h2><button type="button" aria-label="Dialog schließen" onClick={closeDialog}>×</button></div>
+      <div className="dialog-title"><span className="calendar-icon" aria-hidden="true">▣</span><h2 id="task-dialog-title">{editingTaskId === null ? 'Neue Aufgabe hinzufügen' : 'Aufgabe bearbeiten'}</h2><button type="button" aria-label="Dialog schließen" onClick={closeDialog}>×</button></div>
       <form onSubmit={addTask}>
         <label>Titel<input autoFocus required maxLength={80} value={form.title} onChange={(event) => setForm({ ...form, title: event.target.value })} placeholder="z. B. Chronos, Gaming, Sport, ..." /></label>
+        <label>Datum<input type="date" required value={form.date} onChange={(event) => setForm({ ...form, date: event.target.value })} /></label>
         <div className="time-fields"><label>Startzeit<input type="time" required value={form.startTime} onChange={(event) => setForm({ ...form, startTime: event.target.value })} /></label><label>Endzeit<input type="time" required value={form.endTime} onChange={(event) => setForm({ ...form, endTime: event.target.value })} /></label></div>
         <label>Beschreibung <span>(optional)</span><textarea maxLength={200} value={form.description} onChange={(event) => setForm({ ...form, description: event.target.value })} placeholder="z. B. Woran genau möchtest du arbeiten?" /><small>{form.description.length} / 200</small></label>
         <div className="dialog-actions"><button className="cancel-button" type="button" onClick={closeDialog}>Abbrechen</button><button className="submit-button" type="submit">{editingTaskId === null ? 'Hinzufügen' : 'Speichern'}</button></div>

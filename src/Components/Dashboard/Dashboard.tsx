@@ -17,6 +17,16 @@ type Task = {
 }
 
 const initialTasks: Task[] = []
+const tasksStorageKey = 'chronos.tasks'
+
+const loadTasks = (): Task[] => {
+  try {
+    const stored = localStorage.getItem(tasksStorageKey)
+    if (!stored) return initialTasks
+    const parsed: unknown = JSON.parse(stored)
+    return Array.isArray(parsed) ? parsed as Task[] : initialTasks
+  } catch { return initialTasks }
+}
 
 const formatDate = new Intl.DateTimeFormat('de-DE', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
 
@@ -109,7 +119,7 @@ function Calendar({ selectedDate, onDateSelect }: CalendarProps) {
 
 export default function Dashboard() {
   const today = new Date()
-  const [tasks, setTasks] = useState<Task[]>(initialTasks)
+  const [tasks, setTasks] = useState<Task[]>(loadTasks)
   const [selectedDay, setSelectedDay] = useState(new Date(today.getFullYear(), today.getMonth(), today.getDate()))
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [editingTaskId, setEditingTaskId] = useState<number | null>(null)
@@ -120,6 +130,7 @@ export default function Dashboard() {
   const [isTimerRunning, setIsTimerRunning] = useState(true)
   const [isTimerFullscreen, setIsTimerFullscreen] = useState(false)
   const timerPanelRef = useRef<HTMLElement>(null)
+  useEffect(() => { localStorage.setItem(tasksStorageKey, JSON.stringify(tasks)) }, [tasks])
   const selectedDateKey = dateKey(selectedDay)
   const visibleTasks = useMemo(() => tasks.filter((task) => matchesRecurrence(task, selectedDateKey)), [tasks, selectedDateKey])
   const completed = useMemo(() => visibleTasks.filter((task) => task.completed).length, [visibleTasks])

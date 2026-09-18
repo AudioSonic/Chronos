@@ -1,4 +1,7 @@
 import './Sidebar.css'
+import IconHome from '../../Assets/icon_home.svg'
+import IconProject from '../../Assets/icon_project.svg'
+import ChronosLogo from '../../Assets/Chronos_Logo.png'
 
 type NavigationItem = {
   label: string
@@ -11,22 +14,21 @@ type SidebarProps = {
 }
 
 const navigation: NavigationItem[] = [
-  { label: 'Dashboard', icon: '⌂' },
-  { label: 'Projekte', icon: '▣' },
+  { label: 'Dashboard', icon: IconHome },
+  { label: 'Projekte', icon: IconProject },
 ]
 
 export default function Sidebar({ activePage, onNavigate }: SidebarProps) {
   return (
     <aside className="sidebar" aria-label="Hauptnavigation">
       <div className="sidebar-brand">
-        <span className="brand-mark" aria-hidden="true">✦</span>
-        <span>Chronos</span>
+        <img src={ChronosLogo} alt="Chronos" />
       </div>
 
       <nav className="sidebar-navigation">
         {navigation.map((item, index) => (
           <a className={`navigation-item ${activePage === (index === 0 ? 'dashboard' : 'projects') ? 'is-active' : ''}`} href={`#${index === 0 ? 'dashboard' : 'projects'}`} key={item.label} onClick={(event) => { event.preventDefault(); onNavigate(index === 0 ? 'dashboard' : 'projects') }}>
-            <span className="navigation-icon" aria-hidden="true">{item.icon}</span>
+            <span className="navigation-icon" aria-hidden="true"><img src={item.icon} alt="" /></span>
             <span>{item.label}</span>
           </a>
         ))}

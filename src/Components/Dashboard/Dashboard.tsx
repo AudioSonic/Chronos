@@ -1,8 +1,11 @@
 import { FormEvent, type CSSProperties, useEffect, useMemo, useState } from 'react'
-import './Dashboard.css'
+import "./Dashboard.css"
+import IconCalender from '../../Assets/icon_calender.svg'
+import IconToday from '../../Assets/icon_today.svg'
 
 type Task = {
   id: number
+  date: string
   title: string
   description: string
   startTime: string
@@ -29,8 +32,71 @@ const formatInvestedTime = (seconds: number) => {
   return `${formatDuration(safeSeconds).slice(0, 5)}h`
 }
 
+const dateKey = (date: Date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
+
+const monthFormatter = new Intl.DateTimeFormat('de-DE', { month: 'long' })
+const monthYearFormatter = new Intl.DateTimeFormat('de-DE', { month: 'long', year: 'numeric' })
+const shortDateFormatter = new Intl.DateTimeFormat('de-DE', { day: '2-digit', month: '2-digit', year: '2-digit' })
+
+const startOfCalendar = (date: Date) => {
+  const first = new Date(date.getFullYear(), date.getMonth(), 1)
+  const mondayOffset = (first.getDay() + 6) % 7
+  first.setDate(first.getDate() - mondayOffset)
+  return first
+}
+
+type CalendarProps = {
+  selectedDate: Date
+  onDateSelect: (date: Date) => void
+}
+
+function Calendar({ selectedDate, onDateSelect }: CalendarProps) {
+  const today = new Date()
+  const [displayMonth, setDisplayMonth] = useState(new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1))
+  useEffect(() => {
+    setDisplayMonth(new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1))
+  }, [selectedDate])
+  const calendarStart = startOfCalendar(displayMonth)
+  const days = Array.from({ length: 42 }, (_, index) => {
+    const date = new Date(calendarStart)
+    date.setDate(calendarStart.getDate() + index)
+    return date
+  })
+  const selectedKey = selectedDate.toDateString()
+
+  const changeMonth = (offset: number) => setDisplayMonth((current) => new Date(current.getFullYear(), current.getMonth() + offset, 1))
+  const goToToday = () => {
+    const current = new Date()
+    setDisplayMonth(new Date(current.getFullYear(), current.getMonth(), 1))
+    onDateSelect(new Date(current.getFullYear(), current.getMonth(), current.getDate()))
+  }
+
+  return <section className="calendar-panel" aria-label="Kalender">
+    <div className="calendar-toolbar">
+      <div><span className="calendar-icon" aria-hidden="true"><img src={IconCalender} alt="" /></span><div><h2>Kalender</h2></div></div>
+      <button className="calendar-today-button" type="button" onClick={goToToday}>Heute</button>
+    </div>
+    <div className="calendar-navigation">
+      <button type="button" aria-label="Vorheriger Monat" onClick={() => changeMonth(-1)}>‹</button>
+      <strong>{monthYearFormatter.format(displayMonth)}</strong>
+      <button type="button" aria-label="Nächster Monat" onClick={() => changeMonth(1)}>›</button>
+    </div>
+    <div className="calendar-grid" role="grid">
+      {['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'].map((day) => <span className="calendar-weekday" key={day}>{day}</span>)}
+      {days.map((date) => {
+        const isCurrentMonth = date.getMonth() === displayMonth.getMonth()
+        const isToday = date.toDateString() === today.toDateString()
+        const isSelected = date.toDateString() === selectedKey
+        return <button className={`calendar-day ${isCurrentMonth ? '' : 'is-outside'} ${isToday ? 'is-today' : ''} ${isSelected ? 'is-selected' : ''}`} type="button" key={date.toISOString()} aria-label={date.toLocaleDateString('de-DE')} aria-pressed={isSelected} onClick={() => onDateSelect(date)}>{date.getDate()}</button>
+      })}
+    </div>
+  </section>
+}
+
 export default function Dashboard() {
+  const today = new Date()
   const [tasks, setTasks] = useState<Task[]>(initialTasks)
+  const [selectedDay, setSelectedDay] = useState(new Date(today.getFullYear(), today.getMonth(), today.getDate()))
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [editingTaskId, setEditingTaskId] = useState<number | null>(null)
   const [form, setForm] = useState({ title: '', startTime: '08:00', endTime: '09:00', description: '' })
@@ -38,8 +104,10 @@ export default function Dashboard() {
   const [openMenuTaskId, setOpenMenuTaskId] = useState<number | null>(null)
   const [elapsedSeconds, setElapsedSeconds] = useState(0)
   const [isTimerRunning, setIsTimerRunning] = useState(true)
-  const completed = useMemo(() => tasks.filter((task) => task.completed).length, [tasks])
-  const progress = tasks.length ? Math.round((completed / tasks.length) * 100) : 0
+  const selectedDateKey = dateKey(selectedDay)
+  const visibleTasks = useMemo(() => tasks.filter((task) => task.date === selectedDateKey), [tasks, selectedDateKey])
+  const completed = useMemo(() => visibleTasks.filter((task) => task.completed).length, [visibleTasks])
+  const progress = visibleTasks.length ? Math.round((completed / visibleTasks.length) * 100) : 0
 
   const closeDialog = () => {
     setIsDialogOpen(false)
@@ -59,7 +127,7 @@ export default function Dashboard() {
     if (!form.title.trim()) return
     setTasks((current) => {
       if (editingTaskId !== null) return current.map((task) => task.id === editingTaskId ? { ...task, title: form.title.trim(), description: form.description.trim(), startTime: form.startTime, endTime: form.endTime } : task).sort((a, b) => a.startTime.localeCompare(b.startTime))
-      return [...current, { id: Date.now(), title: form.title.trim(), description: form.description.trim(), startTime: form.startTime, endTime: form.endTime, completed: false, investedSeconds: 0 }].sort((a, b) => a.startTime.localeCompare(b.startTime))
+      return [...current, { id: Date.now(), date: selectedDateKey, title: form.title.trim(), description: form.description.trim(), startTime: form.startTime, endTime: form.endTime, completed: false, investedSeconds: 0 }].sort((a, b) => a.startTime.localeCompare(b.startTime))
     })
     closeDialog()
   }
@@ -70,6 +138,12 @@ export default function Dashboard() {
     setOpenMenuTaskId(null)
   }
   const activeTask = tasks.find((task) => task.id === activeTaskId)
+
+  const changeSelectedDay = (offset: number) => setSelectedDay((current) => {
+    const next = new Date(current)
+    next.setDate(next.getDate() + offset)
+    return next
+  })
 
   useEffect(() => {
     if (!activeTask || !isTimerRunning) return
@@ -114,9 +188,9 @@ export default function Dashboard() {
 
     <div className="planning-layout">
       <section className="daily-plan" aria-labelledby="daily-plan-heading">
-        <div className="plan-heading"><div><span className="calendar-icon" aria-hidden="true">▣</span><h2 id="daily-plan-heading">Tagesplan</h2></div><button className="add-task-button" type="button" onClick={() => setIsDialogOpen(true)}><span>＋</span> Zeitraum hinzufügen</button></div>
+        <div className="plan-heading"><div><span className="calendar-icon" aria-hidden="true"><img src={IconToday} alt="" /></span><h2 id="daily-plan-heading">Tagesplan</h2></div><div className="plan-heading-actions"><div className="day-navigation" aria-label="Tag auswählen"><button type="button" aria-label="Vorheriger Tag" onClick={() => changeSelectedDay(-1)}>‹</button><time dateTime={selectedDay.toISOString().slice(0, 10)}>{shortDateFormatter.format(selectedDay)}</time><button type="button" aria-label="Nächster Tag" onClick={() => changeSelectedDay(1)}>›</button></div><button className="add-task-button" type="button" onClick={() => setIsDialogOpen(true)}><span>＋</span> Zeitraum hinzufügen</button></div></div>
         <div className="task-list">
-          {tasks.length ? tasks.map((task, index) => <article className={`task-card ${task.completed ? 'is-completed' : ''}`} key={task.id}>
+          {visibleTasks.length ? visibleTasks.map((task, index) => <article className={`task-card ${task.completed ? 'is-completed' : ''}`} key={task.id}>
             <span className={`task-color task-color-${index % 6}`} />
             <div className="task-time"><time>{task.startTime}</time><time>{task.endTime}</time></div>
             <div className="task-details"><h3>{task.title}</h3>{task.description && <p>{task.description}</p>}</div>
@@ -127,11 +201,14 @@ export default function Dashboard() {
         </div>
       </section>
 
-      <aside className="day-summary" aria-label="Tagesübersicht">
-        <h2>Tagesübersicht</h2>
-        <div className="progress-ring" style={{ '--progress': `${progress * 3.6}deg` } as CSSProperties}><div><strong>{completed} / {tasks.length}</strong><span>Abgeschlossen</span></div></div>
-        <dl className="summary-list"><div><dt><i className="open-dot" />Offen</dt><dd>{tasks.length - completed}</dd></div><div><dt><i className="done-dot" />Abgeschlossen</dt><dd>{completed}</dd></div></dl>
-        <div className="invested-times"><h3>Investierte Zeit</h3>{tasks.filter((task) => Number.isFinite(task.investedSeconds) && task.investedSeconds >= 1).map((task) => <div className="invested-time-row" key={task.id}><span>{task.title}</span><strong>{formatInvestedTime(task.investedSeconds)}</strong></div>)}</div>
+      <aside className="planning-sidebar">
+        <Calendar selectedDate={selectedDay} onDateSelect={setSelectedDay} />
+        <section className="day-summary" aria-label="Tagesübersicht">
+          <h2>Tagesübersicht</h2>
+        <div className="progress-ring" style={{ '--progress': `${progress * 3.6}deg` } as CSSProperties}><div><strong>{completed} / {visibleTasks.length}</strong><span>Abgeschlossen</span></div></div>
+        <dl className="summary-list"><div><dt><i className="open-dot" />Offen</dt><dd>{visibleTasks.length - completed}</dd></div><div><dt><i className="done-dot" />Abgeschlossen</dt><dd>{completed}</dd></div></dl>
+        <div className="invested-times"><h3>Investierte Zeit</h3>{visibleTasks.filter((task) => Number.isFinite(task.investedSeconds) && task.investedSeconds >= 1).map((task) => <div className="invested-time-row" key={task.id}><span>{task.title}</span><strong>{formatInvestedTime(task.investedSeconds)}</strong></div>)}</div>
+        </section>
       </aside>
     </div>
 

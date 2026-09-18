@@ -13,6 +13,7 @@ type Task = {
   endTime: string
   completed: boolean
   investedSeconds: number
+  recurrence?: { frequency: 'daily' | 'weekly' | 'monthly' | 'yearly' | 'custom'; startDate: string; endDate?: string; weekdays?: number[] }
 }
 
 const initialTasks: Task[] = []
@@ -34,6 +35,18 @@ const formatInvestedTime = (seconds: number) => {
 }
 
 const dateKey = (date: Date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
+const parseDateKey = (key: string) => { const [year, month, day] = key.split('-').map(Number); return new Date(year, month - 1, day) }
+const matchesRecurrence = (task: Task, key: string) => {
+  if (!task.recurrence) return task.date === key
+  const current = parseDateKey(key)
+  const start = parseDateKey(task.recurrence.startDate)
+  if (current < start || (task.recurrence.endDate && current > parseDateKey(task.recurrence.endDate))) return false
+  if (task.recurrence.frequency === 'daily') return true
+  if (task.recurrence.frequency === 'weekly') return current.getDay() === start.getDay()
+  if (task.recurrence.frequency === 'monthly') return current.getDate() === start.getDate()
+  if (task.recurrence.frequency === 'yearly') return current.getDate() === start.getDate() && current.getMonth() === start.getMonth()
+  return task.recurrence.weekdays?.includes(current.getDay()) ?? false
+}
 
 const monthFormatter = new Intl.DateTimeFormat('de-DE', { month: 'long' })
 const monthYearFormatter = new Intl.DateTimeFormat('de-DE', { month: 'long', year: 'numeric' })
@@ -100,7 +113,7 @@ export default function Dashboard() {
   const [selectedDay, setSelectedDay] = useState(new Date(today.getFullYear(), today.getMonth(), today.getDate()))
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [editingTaskId, setEditingTaskId] = useState<number | null>(null)
-  const [form, setForm] = useState({ title: '', date: dateKey(selectedDay), startTime: '08:00', endTime: '09:00', description: '' })
+  const [form, setForm] = useState({ title: '', date: dateKey(selectedDay), endDate: '', startTime: '08:00', endTime: '09:00', description: '', repeats: false, frequency: 'weekly' as 'daily' | 'weekly' | 'monthly' | 'yearly' | 'custom', weekdays: [] as number[] })
   const [activeTaskId, setActiveTaskId] = useState<number | null>(null)
   const [openMenuTaskId, setOpenMenuTaskId] = useState<number | null>(null)
   const [elapsedSeconds, setElapsedSeconds] = useState(0)
@@ -108,19 +121,19 @@ export default function Dashboard() {
   const [isTimerFullscreen, setIsTimerFullscreen] = useState(false)
   const timerPanelRef = useRef<HTMLElement>(null)
   const selectedDateKey = dateKey(selectedDay)
-  const visibleTasks = useMemo(() => tasks.filter((task) => task.date === selectedDateKey), [tasks, selectedDateKey])
+  const visibleTasks = useMemo(() => tasks.filter((task) => matchesRecurrence(task, selectedDateKey)), [tasks, selectedDateKey])
   const completed = useMemo(() => visibleTasks.filter((task) => task.completed).length, [visibleTasks])
   const progress = visibleTasks.length ? Math.round((completed / visibleTasks.length) * 100) : 0
 
   const closeDialog = () => {
     setIsDialogOpen(false)
     setEditingTaskId(null)
-    setForm({ title: '', date: dateKey(selectedDay), startTime: '08:00', endTime: '09:00', description: '' })
+    setForm({ title: '', date: dateKey(selectedDay), endDate: '', startTime: '08:00', endTime: '09:00', description: '', repeats: false, frequency: 'weekly', weekdays: [] })
   }
 
   const openEditDialog = (task: Task) => {
     setEditingTaskId(task.id)
-    setForm({ title: task.title, date: task.date, startTime: task.startTime, endTime: task.endTime, description: task.description })
+    setForm({ title: task.title, date: task.date, endDate: task.recurrence?.endDate ?? '', startTime: task.startTime, endTime: task.endTime, description: task.description, repeats: Boolean(task.recurrence), frequency: task.recurrence?.frequency ?? 'weekly', weekdays: task.recurrence?.weekdays ?? [] })
     setOpenMenuTaskId(null)
     setIsDialogOpen(true)
   }
@@ -129,8 +142,9 @@ export default function Dashboard() {
     event.preventDefault()
     if (!form.title.trim()) return
     setTasks((current) => {
-      if (editingTaskId !== null) return current.map((task) => task.id === editingTaskId ? { ...task, date: form.date, title: form.title.trim(), description: form.description.trim(), startTime: form.startTime, endTime: form.endTime } : task).sort((a, b) => a.startTime.localeCompare(b.startTime))
-      return [...current, { id: Date.now(), date: form.date, title: form.title.trim(), description: form.description.trim(), startTime: form.startTime, endTime: form.endTime, completed: false, investedSeconds: 0 }].sort((a, b) => a.startTime.localeCompare(b.startTime))
+      const recurrence = form.repeats ? { frequency: form.frequency, startDate: form.date, ...(form.endDate ? { endDate: form.endDate } : {}), ...(form.frequency === 'custom' ? { weekdays: form.weekdays } : {}) } : undefined
+      if (editingTaskId !== null) return current.map((task) => task.id === editingTaskId ? { ...task, date: form.date, recurrence, title: form.title.trim(), description: form.description.trim(), startTime: form.startTime, endTime: form.endTime } : task).sort((a, b) => a.startTime.localeCompare(b.startTime))
+      return [...current, { id: Date.now(), date: form.date, recurrence, title: form.title.trim(), description: form.description.trim(), startTime: form.startTime, endTime: form.endTime, completed: false, investedSeconds: 0 }].sort((a, b) => a.startTime.localeCompare(b.startTime))
     })
     closeDialog()
   }
@@ -185,6 +199,13 @@ export default function Dashboard() {
     return () => document.removeEventListener('fullscreenchange', handleFullscreenChange)
   }, [])
 
+  useEffect(() => {
+    if (!isDialogOpen) return
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => { document.body.style.overflow = previousOverflow }
+  }, [isDialogOpen])
+
   if (activeTask) {
     const plannedSeconds = secondsBetween(activeTask.startTime, activeTask.endTime)
     const timerProgress = plannedSeconds ? Math.min(elapsedSeconds / plannedSeconds * 100, 100) : 0
@@ -206,7 +227,7 @@ export default function Dashboard() {
 
     <div className="planning-layout">
       <section className="daily-plan" aria-labelledby="daily-plan-heading">
-        <div className="plan-heading"><div><span className="calendar-icon" aria-hidden="true"><img src={IconToday} alt="" /></span><h2 id="daily-plan-heading">Tagesplan</h2></div><div className="plan-heading-actions"><div className="day-navigation" aria-label="Tag auswählen"><button type="button" aria-label="Vorheriger Tag" onClick={() => changeSelectedDay(-1)}>‹</button><time dateTime={selectedDay.toISOString().slice(0, 10)}>{shortDateFormatter.format(selectedDay)}</time><button type="button" aria-label="Nächster Tag" onClick={() => changeSelectedDay(1)}>›</button></div><button className="add-task-button" type="button" onClick={() => { setForm({ title: '', date: selectedDateKey, startTime: '08:00', endTime: '09:00', description: '' }); setEditingTaskId(null); setIsDialogOpen(true) }}><span>＋</span> Aufgabe hinzufügen</button></div></div>
+        <div className="plan-heading"><div><span className="calendar-icon" aria-hidden="true"><img src={IconToday} alt="" /></span><h2 id="daily-plan-heading">Tagesplan</h2></div><div className="plan-heading-actions"><div className="day-navigation" aria-label="Tag auswählen"><button type="button" aria-label="Vorheriger Tag" onClick={() => changeSelectedDay(-1)}>‹</button><time dateTime={selectedDay.toISOString().slice(0, 10)}>{shortDateFormatter.format(selectedDay)}</time><button type="button" aria-label="Nächster Tag" onClick={() => changeSelectedDay(1)}>›</button></div><button className="add-task-button" type="button" onClick={() => { setForm({ title: '', date: selectedDateKey, endDate: '', startTime: '08:00', endTime: '09:00', description: '', repeats: false, frequency: 'weekly', weekdays: [] }); setEditingTaskId(null); setIsDialogOpen(true) }}><span>＋</span> Aufgabe hinzufügen</button></div></div>
         <div className="task-list">
           {visibleTasks.length ? visibleTasks.map((task, index) => <article className={`task-card ${task.completed ? 'is-completed' : ''}`} key={task.id}>
             <span className={`task-color task-color-${index % 6}`} />
@@ -234,7 +255,9 @@ export default function Dashboard() {
       <div className="dialog-title"><span className="calendar-icon" aria-hidden="true">▣</span><h2 id="task-dialog-title">{editingTaskId === null ? 'Neue Aufgabe hinzufügen' : 'Aufgabe bearbeiten'}</h2><button type="button" aria-label="Dialog schließen" onClick={closeDialog}>×</button></div>
       <form onSubmit={addTask}>
         <label>Titel<input autoFocus required maxLength={80} value={form.title} onChange={(event) => setForm({ ...form, title: event.target.value })} placeholder="z. B. Chronos, Gaming, Sport, ..." /></label>
-        <label>Datum<input type="date" required value={form.date} onChange={(event) => setForm({ ...form, date: event.target.value })} /></label>
+        <label>{form.repeats ? 'Startdatum' : 'Datum'}<input type="date" required value={form.date} onChange={(event) => setForm({ ...form, date: event.target.value })} /></label>
+        <label className="repeat-toggle"><input type="checkbox" checked={form.repeats} onChange={(event) => setForm({ ...form, repeats: event.target.checked })} /><span>Aufgabe wiederholen</span></label>
+        {form.repeats && <div className="recurrence-fields"><label>Wiederholung<select value={form.frequency} onChange={(event) => setForm({ ...form, frequency: event.target.value as typeof form.frequency })}><option value="daily">Täglich</option><option value="weekly">Wöchentlich</option><option value="monthly">Monatlich</option><option value="yearly">Jährlich</option><option value="custom">Individuell</option></select></label><label>Enddatum <span>(optional)</span><input type="date" min={form.date} value={form.endDate} onChange={(event) => setForm({ ...form, endDate: event.target.value })} /></label>{form.frequency === 'custom' && <div className="weekday-picker"><span>Wochentage</span><div>{[['Mo', 1], ['Di', 2], ['Mi', 3], ['Do', 4], ['Fr', 5], ['Sa', 6], ['So', 0]].map(([label, day]) => <label key={day as number}><input type="checkbox" checked={form.weekdays.includes(day as number)} onChange={(event) => setForm({ ...form, weekdays: event.target.checked ? [...form.weekdays, day as number] : form.weekdays.filter((item) => item !== day) })} /><span>{label}</span></label>)}</div></div>}</div>}
         <div className="time-fields"><label>Startzeit<input type="time" required value={form.startTime} onChange={(event) => setForm({ ...form, startTime: event.target.value })} /></label><label>Endzeit<input type="time" required value={form.endTime} onChange={(event) => setForm({ ...form, endTime: event.target.value })} /></label></div>
         <label>Beschreibung <span>(optional)</span><textarea maxLength={200} value={form.description} onChange={(event) => setForm({ ...form, description: event.target.value })} placeholder="z. B. Woran genau möchtest du arbeiten?" /><small>{form.description.length} / 200</small></label>
         <div className="dialog-actions"><button className="cancel-button" type="button" onClick={closeDialog}>Abbrechen</button><button className="submit-button" type="submit">{editingTaskId === null ? 'Hinzufügen' : 'Speichern'}</button></div>

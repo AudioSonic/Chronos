@@ -67,6 +67,9 @@
 .timer-fullscreen-button:hover { background: var(--color-accent); }
 .timer-fullscreen-button img { display: block; width: 22px; height: 22px; }
 .work-timer-panel:fullscreen { width: 100vw; height: 100vh; border: 0; border-radius: 0; }
+.dialog-backdrop { overflow-y: auto; overscroll-behavior: contain; }
+.task-dialog { max-height: calc(100vh - 40px); overflow-y: auto; }
+.repeat-toggle { display: flex !important; grid-template-columns: auto 1fr; align-items: center; gap: 9px !important; cursor: pointer; }.repeat-toggle input, .weekday-picker input { width: auto; accent-color: var(--color-accent); }.repeat-toggle span { color: var(--color-text-primary) !important; }.recurrence-fields { display: grid; gap: 16px; padding: 15px; border: 1px solid var(--color-border); border-radius: 7px; background: rgba(8, 32, 52, .35); }.recurrence-fields select { width: 100%; padding: 12px 14px; border: 1px solid rgba(100, 179, 241, .28); border-radius: 7px; outline: 0; color: var(--color-text-primary); background: rgba(8, 32, 52, .72); }.weekday-picker { display: grid; gap: 8px; }.weekday-picker > span { color: var(--color-text-primary); font-weight: 600; }.weekday-picker > div { display: flex; flex-wrap: wrap; gap: 7px; }.weekday-picker label { display: flex !important; align-items: center; gap: 5px !important; padding: 7px 9px; border: 1px solid var(--color-border); border-radius: 5px; color: var(--color-text-secondary); background: rgba(16, 52, 77, .6); font-size: .8rem; cursor: pointer; }.weekday-picker label:has(input:checked) { border-color: var(--color-accent); color: white; background: rgba(56, 165, 255, .25); }
 .work-ring strong { font-size: clamp(1.25rem, 2.7vw, 2.55rem); white-space: nowrap; }
 .work-info, .next-task { padding: 26px 30px; }
 .task-card { overflow: visible; }

@@ -3,7 +3,7 @@ import ProjectCard from './ProjectCard'
 import ProjectFilters from './ProjectFilters'
 import './ProjectOverview.css'
 
-export type Project = { name: string; description: string; tags: string[]; progress: number; tasks: string; dates: string; status: 'Offen' | 'Geplant' | 'Pausiert'; category?: string; goal?: string; startDate?: string; endDate?: string; image?: string }
+export type Project = { id: number; name: string; description: string; tags: string[]; progress: number; tasks: string; dates: string; status: 'Offen' | 'Geplant' | 'Pausiert'; category?: string; goal?: string; startDate?: string; endDate?: string; image?: string }
 const defaultCover = 'default'
 const projectsStorageKey = 'chronos.projects'
 
@@ -12,7 +12,8 @@ const loadProjects = (): Project[] => {
     const stored = localStorage.getItem(projectsStorageKey)
     if (!stored) return []
     const parsed: unknown = JSON.parse(stored)
-    return Array.isArray(parsed) ? parsed : []
+    if (!Array.isArray(parsed)) return []
+    return parsed.map((project) => ({ ...project, id: typeof project.id === 'number' ? project.id : Date.now() + Math.floor(Math.random() * 100000) }))
   } catch { return [] }
 }
 
@@ -34,7 +35,7 @@ export default function ProjectOverview({ onOpenProject }: { onOpenProject: (pro
       input.reportValidity()
       return
     }
-    const project: Project = { name: String(form.get('name')).trim(), description: String(form.get('description') || ''), goal: String(form.get('goal') || ''), category: String(form.get('category') || 'Keine Kategorie'), tags: draftTags, progress: 0, tasks: '0 / 0 Tasks', dates: startDate ? `${startDate} – ${endDate || 'offen'}` : 'Kein Zeitraum', status: (form.get('status') as Project['status']) || 'Offen', startDate, endDate, image: String(form.get('image') || defaultCover) }
+    const project: Project = { id: Date.now(), name: String(form.get('name')).trim(), description: String(form.get('description') || ''), goal: String(form.get('goal') || ''), category: String(form.get('category') || 'Keine Kategorie'), tags: draftTags, progress: 0, tasks: '0 / 0 Tasks', dates: startDate ? `${startDate} – ${endDate || 'offen'}` : 'Kein Zeitraum', status: (form.get('status') as Project['status']) || 'Offen', startDate, endDate, image: String(form.get('image') || defaultCover) }
     setProjects((current) => [...current, project])
     setIsCreateOpen(false)
     setDraftTags([])

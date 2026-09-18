@@ -3,8 +3,9 @@ import "./Dashboard.css"
 import IconCalender from '../../Assets/icon_calender.svg'
 import IconToday from '../../Assets/icon_today.svg'
 import IconFullScreen from '../../Assets/icon full screen.svg'
+import ProjectTaskPool from './ProjectTaskPool'
 
-type Task = {
+export type Task = {
   id: number
   date: string
   title: string
@@ -14,6 +15,9 @@ type Task = {
   completed: boolean
   investedSeconds: number
   recurrence?: { frequency: 'daily' | 'weekly' | 'monthly' | 'yearly' | 'custom'; startDate: string; endDate?: string; weekdays?: number[] }
+  projectId?: number
+  dueDate?: string
+  plannedForDate?: string
 }
 
 const initialTasks: Task[] = []
@@ -47,6 +51,7 @@ const formatInvestedTime = (seconds: number) => {
 const dateKey = (date: Date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
 const parseDateKey = (key: string) => { const [year, month, day] = key.split('-').map(Number); return new Date(year, month - 1, day) }
 const matchesRecurrence = (task: Task, key: string) => {
+  if (task.projectId !== undefined) return task.plannedForDate === key
   if (!task.recurrence) return task.date === key
   const current = parseDateKey(key)
   const start = parseDateKey(task.recurrence.startDate)
@@ -161,6 +166,8 @@ export default function Dashboard() {
   }
 
   const toggleTask = (id: number) => setTasks((current) => current.map((task) => task.id === id ? { ...task, completed: !task.completed } : task))
+  const planProjectTask = (id: number) => setTasks((current) => current.map((task) => task.id === id ? { ...task, plannedForDate: dateKey(new Date()) } : task))
+  const removeProjectTaskFromPlan = (id: number) => setTasks((current) => current.map((task) => task.id === id ? { ...task, plannedForDate: undefined } : task))
   const removeTask = (id: number) => {
     setTasks((current) => current.filter((task) => task.id !== id))
     setOpenMenuTaskId(null)
@@ -246,9 +253,10 @@ export default function Dashboard() {
             <div className="task-details"><h3>{task.title}</h3>{task.description && <p>{task.description}</p>}</div>
             <button className="work-mode-button" type="button" onClick={() => startWorkMode(task.id)} aria-label={`Work Mode für ${task.title} starten`}>▶ <span>Work Mode starten</span></button>
             <label className="task-checkbox" title={task.completed ? 'Als offen markieren' : 'Als abgeschlossen markieren'}><input type="checkbox" checked={task.completed} onChange={() => toggleTask(task.id)} aria-label={`${task.title} als ${task.completed ? 'offen' : 'abgeschlossen'} markieren`} /><span>✓</span></label>
-            <div className="task-options"><button className="task-options-button" type="button" aria-label={`Optionen für ${task.title}`} aria-expanded={openMenuTaskId === task.id} onClick={() => setOpenMenuTaskId((current) => current === task.id ? null : task.id)}>⋮</button>{openMenuTaskId === task.id && <div className="task-options-menu"><button type="button" onClick={() => openEditDialog(task)}>Aufgabe bearbeiten</button><button className="danger-option" type="button" onClick={() => removeTask(task.id)}>Aufgabe entfernen</button></div>}</div>
+            <div className="task-options"><button className="task-options-button" type="button" aria-label={`Optionen für ${task.title}`} aria-expanded={openMenuTaskId === task.id} onClick={() => setOpenMenuTaskId((current) => current === task.id ? null : task.id)}>⋮</button>{openMenuTaskId === task.id && <div className="task-options-menu">{task.projectId !== undefined && <button type="button" onClick={() => { removeProjectTaskFromPlan(task.id); setOpenMenuTaskId(null) }}>Aus Tagesplan entfernen</button>}<button type="button" onClick={() => openEditDialog(task)}>Aufgabe bearbeiten</button><button className="danger-option" type="button" onClick={() => removeTask(task.id)}>Aufgabe entfernen</button></div>}</div>
           </article>) : <div className="empty-plan"><span>✦</span><h3>Noch nichts geplant</h3><p>Füge deinen ersten Zeitraum für heute hinzu.</p></div>}
         </div>
+        <ProjectTaskPool tasks={tasks} onPlan={planProjectTask} />
       </section>
 
       <aside className="planning-sidebar">
@@ -261,7 +269,6 @@ export default function Dashboard() {
         </section>
       </aside>
     </div>
-
     {isDialogOpen && <div className="dialog-backdrop" role="presentation" onMouseDown={closeDialog}><section className="task-dialog" role="dialog" aria-modal="true" aria-labelledby="task-dialog-title" onMouseDown={(event) => event.stopPropagation()}>
       <div className="dialog-title"><span className="calendar-icon" aria-hidden="true">▣</span><h2 id="task-dialog-title">{editingTaskId === null ? 'Neue Aufgabe hinzufügen' : 'Aufgabe bearbeiten'}</h2><button type="button" aria-label="Dialog schließen" onClick={closeDialog}>×</button></div>
       <form onSubmit={addTask}>

@@ -28,7 +28,7 @@
 .project-card-title-row { display: flex; justify-content: space-between; align-items: center; }
 .project-card h2 { font-size: 1.15rem; }
 .icon-button { color: var(--color-text-muted); background: transparent; font-size: 1.4rem; }
-.project-description { min-height: 48px; margin-top: 8px; color: var(--color-text-secondary); line-height: 1.45; }
+.project-description { min-height: 48px; max-height: calc(1.45em * 3); margin-top: 8px; overflow: hidden; color: var(--color-text-secondary); line-height: 1.45; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; }
 .tag-list { display: flex; flex-wrap: wrap; gap: 8px; margin: 13px 0 18px; }
 .tag { padding: 6px 9px; border-radius: 7px; color: var(--color-text-secondary); background: var(--color-surface-light); font-size: .75rem; }
 .progress-row { display: flex; align-items: center; gap: 10px; color: var(--color-text-secondary); font-size: .8rem; }

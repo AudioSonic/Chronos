@@ -130,7 +130,7 @@ export default function Dashboard() {
   const [selectedDay, setSelectedDay] = useState(new Date(today.getFullYear(), today.getMonth(), today.getDate()))
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [editingTaskId, setEditingTaskId] = useState<number | null>(null)
-  const [form, setForm] = useState({ title: '', date: dateKey(selectedDay), endDate: '', startTime: '08:00', endTime: '09:00', description: '', repeats: false, frequency: 'weekly' as 'daily' | 'weekly' | 'monthly' | 'yearly' | 'custom', weekdays: [] as number[] })
+  const [form, setForm] = useState({ title: '', date: dateKey(selectedDay), endDate: '', startTime: '', endTime: '', description: '', repeats: false, frequency: 'weekly' as 'daily' | 'weekly' | 'monthly' | 'yearly' | 'custom', weekdays: [] as number[] })
   const [activeTaskId, setActiveTaskId] = useState<number | null>(null)
   const [openMenuTaskId, setOpenMenuTaskId] = useState<number | null>(null)
   const [elapsedSeconds, setElapsedSeconds] = useState(0)
@@ -146,7 +146,7 @@ export default function Dashboard() {
   const closeDialog = () => {
     setIsDialogOpen(false)
     setEditingTaskId(null)
-    setForm({ title: '', date: dateKey(selectedDay), endDate: '', startTime: '08:00', endTime: '09:00', description: '', repeats: false, frequency: 'weekly', weekdays: [] })
+    setForm({ title: '', date: dateKey(selectedDay), endDate: '', startTime: '', endTime: '', description: '', repeats: false, frequency: 'weekly', weekdays: [] })
   }
 
   const openEditDialog = (task: Task) => {

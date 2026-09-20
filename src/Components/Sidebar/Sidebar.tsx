@@ -2,6 +2,7 @@ import './Sidebar.css'
 import IconHome from '../../Assets/icon_home.svg'
 import IconProject from '../../Assets/icon_project.svg'
 import ChronosLogo from '../../Assets/Chronos_Logo.png'
+import type { NavigationPage } from '../../types/navigation'
 
 type NavigationItem = {
   label: string
@@ -9,8 +10,8 @@ type NavigationItem = {
 }
 
 type SidebarProps = {
-  activePage: 'dashboard' | 'projects'
-  onNavigate: (page: 'dashboard' | 'projects') => void
+  activePage: NavigationPage
+  onNavigate: (page: NavigationPage) => void
 }
 
 const navigation: NavigationItem[] = [

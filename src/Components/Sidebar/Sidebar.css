@@ -15,7 +15,7 @@
 .sidebar-brand { display: flex; align-items: center; justify-content: center; padding: 0 13px 20px; }
 .sidebar-brand img { display: block; width: min(100%, 150px); height: auto; }
 .sidebar-navigation { display: grid; gap: var(--space-2); }
-.navigation-item { display: flex; align-items: center; gap: 13px; min-height: 46px; padding: 0 13px; border-radius: var(--radius-sm); color: var(--color-text-secondary); text-decoration: none; font-size: var(--font-size-sm); transition: background .2s ease, color .2s ease; }
+.navigation-item { display: flex; align-items: center; gap: 13px; min-height: 46px; padding: 0 13px; border-radius: var(--radius-sm); color: var(--color-text-secondary); text-decoration: none; font-size: var(--font-size-sm); transition: background var(--transition-fast), color var(--transition-fast); }
 .navigation-item:hover { color: var(--color-text-primary); background: var(--color-surface-hover); }
 .navigation-item.is-active { color: var(--color-text-primary); background: var(--color-accent-dark); box-shadow: inset 3px 0 var(--color-accent); }
 .navigation-icon { width: 18px; color: var(--color-accent-soft); text-align: center; font-size: 19px; line-height: 1; }

@@ -1,4 +1,5 @@
 import type { Dispatch, FormEvent, SetStateAction } from 'react'
+import Modal from '../../../ui/Modal'
 
 export type ProjectTaskForm = {
   title: string
@@ -20,8 +21,7 @@ type ProjectTaskModalProps = {
 
 export default function ProjectTaskModal({ form, setForm, milestones, editing, onSubmit, onClose }: ProjectTaskModalProps) {
   return (
-    <div className="modal-backdrop">
-      <div className="project-modal" role="dialog" aria-modal="true">
+    <Modal onClose={onClose}>
         <div className="modal-header">
           <h2>{editing === null ? 'Neue Projektaufgabe' : 'Projektaufgabe bearbeiten'}</h2>
           <button className="modal-close" type="button" onClick={onClose}>×</button>
@@ -53,7 +53,6 @@ export default function ProjectTaskModal({ form, setForm, milestones, editing, o
             <button className="primary-button" type="submit">Speichern</button>
           </div>
         </form>
-      </div>
-    </div>
+    </Modal>
   )
 }

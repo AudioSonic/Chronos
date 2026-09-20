@@ -1,5 +1,6 @@
 import type { Dispatch, FormEvent, SetStateAction } from 'react'
 import type { MilestoneStatus } from '../../../../types/common'
+import Modal from '../../../ui/Modal'
 
 export type MilestoneForm = {
   title: string
@@ -19,8 +20,7 @@ type MilestoneModalProps = {
 
 export default function MilestoneModal({ form, setForm, editing, onSubmit, onClose }: MilestoneModalProps) {
   return (
-    <div className="modal-backdrop">
-      <div className="project-modal" role="dialog" aria-modal="true">
+    <Modal onClose={onClose}>
         <div className="modal-header">
           <h2>{editing === null ? 'Neuer Milestone' : 'Milestone bearbeiten'}</h2>
           <button className="modal-close" type="button" onClick={onClose}>×</button>
@@ -57,7 +57,6 @@ export default function MilestoneModal({ form, setForm, editing, onSubmit, onClo
             <button className="primary-button" type="submit">Speichern</button>
           </div>
         </form>
-      </div>
-    </div>
+    </Modal>
   )
 }

@@ -6,6 +6,7 @@ import { milestoneStorage } from '../../../../services/storage/milestoneStorage'
 import ProjectTaskModal, { type ProjectTaskForm } from './ProjectTaskModal'
 import useTasks from '../../../Dashboard/useTasks'
 import useDialog from '../../../../hooks/useDialog'
+import EmptyState from '../../../ui/EmptyState'
 
 const emptyForm: ProjectTaskForm = { title: '', description: '', dueDate: '', milestoneId: '' }
 const formatDate = (value?: string) => value ? new Intl.DateTimeFormat('de-DE').format(new Date(`${value}T12:00:00`)) : 'Keine Fälligkeit'
@@ -59,7 +60,7 @@ export default function ProjectTasks({ project, onProgress }: ProjectTasksProps)
             <div><h3>{task.title}</h3>{task.description && <p>{task.description}</p>}<small>Fällig: {formatDate(task.dueDate)}{task.startTime || task.endTime ? ` · ${task.startTime || '–'} – ${task.endTime || '–'}` : ''}</small>{task.investedSeconds > 0 && <small className="task-invested-time">Investiert: {formatTime(task.investedSeconds)}</small>}</div>
             <div className="project-task-options"><button type="button" onClick={() => setOpenMenuId(openMenuId === task.id ? null : task.id)}>⋮</button>{openMenuId === task.id && <div className="project-task-menu"><button type="button" onClick={() => editTask(task)}>Aufgabe bearbeiten</button><button type="button" className="danger-option" onClick={() => { saveTasks(tasks.filter((item) => item.id !== task.id)); setOpenMenuId(null) }}>Aufgabe entfernen</button></div>}</div>
           </article>
-        )) : <div className="project-task-empty"><h3>Noch keine Aufgaben</h3><p>Füge die erste Aufgabe für dieses Projekt hinzu.</p></div>}
+        )) : <EmptyState className="project-task-empty" title="Noch keine Aufgaben">Füge die erste Aufgabe für dieses Projekt hinzu.</EmptyState>}
       </div>
       {isModalOpen && <ProjectTaskModal form={form} setForm={setForm} milestones={milestones} editing={editingId} onSubmit={submit} onClose={close} />}
     </div>

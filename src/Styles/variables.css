@@ -13,18 +13,28 @@
   --color-accent: #38a5ff;
   --color-accent-soft: #83c5ff;
   --color-accent-dark: #12416a;
+  --color-success: #57db96;
+  --color-danger: #ff7580;
+  --color-warning: #ffd36b;
   --color-text-primary: #f3f7fb;
   --color-text-secondary: #a9bfd3;
   --color-text-muted: #7890a6;
   --color-border-subtle: rgba(152, 198, 239, .12);
   --color-border: rgba(152, 198, 239, .15);
   --shadow-card: 0 16px 30px rgba(0, 0, 0, .12);
+  --shadow-focus: 0 0 0 3px rgba(56, 165, 255, .25);
+  --transition-fast: .18s ease;
   --sidebar-width: 238px;
+  --content-max-width: 1400px;
+  --space-1: .25rem;
   --font-size-sm: .875rem;
+  --font-size-xs: .75rem;
   --font-size-xl: 1.25rem;
   --space-2: .5rem;
   --space-4: 1rem;
   --space-5: 1.25rem;
   --space-7: 1.75rem;
   --radius-sm: .375rem;
+  --radius-md: .5rem;
+  --radius-lg: .75rem;
 }

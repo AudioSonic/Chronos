@@ -19,7 +19,16 @@ function App() {
       <Sidebar activePage={activePage} onNavigate={handleNavigate} />
 
       <main className="content" aria-label="Inhaltsbereich">
-        {activePage === 'projects' && !selectedProject ? <ProjectOverview onOpenProject={setSelectedProject} /> : selectedProject ? <ProjectDetails project={selectedProject} onBack={() => setSelectedProject(null)} /> : <Dashboard />}
+        {activePage === 'projects' && !selectedProject ? (
+          <ProjectOverview onOpenProject={setSelectedProject} />
+        ) : selectedProject ? (
+          <ProjectDetails
+            project={selectedProject}
+            onBack={() => setSelectedProject(null)}
+          />
+        ) : (
+          <Dashboard />
+        )}
       </main>
     </div>
   )

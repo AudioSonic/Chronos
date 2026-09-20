@@ -3,9 +3,13 @@ import type { Task } from './Dashboard'
 type Project = { id: number; name: string }
 const format = (date: string) => new Intl.DateTimeFormat('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' }).format(new Date(`${date}T12:00:00`))
 
-export default function ProjectTaskPool({ tasks, onPlan }: { tasks: Task[]; onPlan: (id: number) => void }) {
-  let projects: Project[] = []
-  try { const value = JSON.parse(localStorage.getItem('chronos.projects') || '[]'); projects = Array.isArray(value) ? value : [] } catch { projects = [] }
+type ProjectTaskPoolProps = {
+  tasks: Task[]
+  projects: Project[]
+  onPlan: (id: number) => void
+}
+
+export default function ProjectTaskPool({ tasks, projects, onPlan }: ProjectTaskPoolProps) {
   const today = new Date(); today.setHours(0, 0, 0, 0)
   const tomorrow = new Date(today); tomorrow.setDate(today.getDate() + 1)
   const nextWeek = new Date(today); nextWeek.setDate(today.getDate() + 8)

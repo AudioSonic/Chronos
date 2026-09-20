@@ -27,8 +27,22 @@ export default function Sidebar({ activePage, onNavigate }: SidebarProps) {
 
       <nav className="sidebar-navigation">
         {navigation.map((item, index) => (
-          <a className={`navigation-item ${activePage === (index === 0 ? 'dashboard' : 'projects') ? 'is-active' : ''}`} href={`#${index === 0 ? 'dashboard' : 'projects'}`} key={item.label} onClick={(event) => { event.preventDefault(); onNavigate(index === 0 ? 'dashboard' : 'projects') }}>
-            <span className="navigation-icon" aria-hidden="true"><img src={item.icon} alt="" /></span>
+          <a
+            className={`navigation-item ${
+              activePage === (index === 0 ? 'dashboard' : 'projects')
+                ? 'is-active'
+                : ''
+            }`}
+            href={`#${index === 0 ? 'dashboard' : 'projects'}`}
+            key={item.label}
+            onClick={(event) => {
+              event.preventDefault()
+              onNavigate(index === 0 ? 'dashboard' : 'projects')
+            }}
+          >
+            <span className="navigation-icon" aria-hidden="true">
+              <img src={item.icon} alt="" />
+            </span>
             <span>{item.label}</span>
           </a>
         ))}

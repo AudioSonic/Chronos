@@ -1,4 +1,4 @@
-import type { Project } from '../ProjectOverview/ProjectOverview'
+import type { Project } from '../../projectTypes'
 import './ProjectSettings.css'
 
 export default function ProjectSettings({ project }: { project: Project }) {

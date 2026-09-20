@@ -1,8 +1,8 @@
-import type { Project } from './ProjectOverview'
+import type { Project } from '../projectTypes'
+import { readStorage } from '../projectStorage'
 
 export default function ProjectCard({ project, onOpen }: { project: Project; onOpen: () => void }) {
-  let projectTasks: { completed: boolean }[] = []
-  try { const stored = JSON.parse(localStorage.getItem('chronos.tasks') || '[]'); projectTasks = Array.isArray(stored) ? stored.filter((task: { projectId?: number }) => task.projectId === project.id) : [] } catch { projectTasks = [] }
+  const projectTasks = readStorage<{ completed: boolean; projectId?: number }[]>('chronos.tasks', []).filter((task) => task.projectId === project.id)
   const completedTasks = projectTasks.filter((task) => task.completed).length
   const progress = projectTasks.length ? Math.round(completedTasks / projectTasks.length * 100) : 0
   const displayDates = project.startDate ? `${new Intl.DateTimeFormat('de-DE').format(new Date(`${project.startDate}T12:00:00`))} – ${project.endDate ? new Intl.DateTimeFormat('de-DE').format(new Date(`${project.endDate}T12:00:00`)) : 'offen'}` : project.dates

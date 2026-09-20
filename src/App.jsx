@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import './App.css'
 import Sidebar from './Components/Sidebar/Sidebar'
-import ProjectOverview from './Components/ProjectOverview/ProjectOverview'
-import ProjectDetails from './Components/ProjectDetails/ProjectDetails'
+import ProjectOverview from './Components/Projects/ProjectOverview/ProjectOverview'
+import ProjectDetails from './Components/Projects/ProjectDetails/ProjectDetails'
 import Dashboard from './Components/Dashboard/Dashboard'
 
 function App() {

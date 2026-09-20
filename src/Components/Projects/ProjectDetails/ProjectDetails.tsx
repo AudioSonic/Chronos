@@ -1,11 +1,11 @@
 import { useCallback, useState } from 'react'
-import type { Project } from '../ProjectOverview/ProjectOverview'
+import type { Project } from '../projectTypes'
 import ProjectTabs from './ProjectTabs'
-import ProjectSettings from './ProjectSettings'
-import ResourcesOverview from './ResourcesOverview'
+import ProjectSettings from './settings/ProjectSettings'
+import ResourcesOverview from './resources/ResourcesOverview'
 import './ProjectDetails.css'
-import ProjectTasks from './ProjectTasks'
-import ProjectMilestones from './ProjectMilestones'
+import ProjectTasks from './tasks/ProjectTasks'
+import ProjectMilestones from './milestones/ProjectMilestones'
 
 const tabs = ['Aufgaben', 'Milestones', 'Dokumentation', 'Ressourcen', 'Einstellungen']
 const formatTotalTime = (seconds: number) => `${Math.floor(seconds / 3600).toString().padStart(2, '0')}:${Math.floor(seconds % 3600 / 60).toString().padStart(2, '0')} h`

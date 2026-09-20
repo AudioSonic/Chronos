@@ -9,6 +9,8 @@ import WorkMode from './WorkMode'
 import TaskDialog, { type TaskForm } from './TaskDialog'
 import useTasks from './useTasks'
 import type { Task } from '../../domain/task'
+import useTaskTimer from '../../hooks/useTaskTimer'
+import useDialog from '../../hooks/useDialog'
 import {
   dateKey,
   formatDate,
@@ -21,12 +23,24 @@ export type { Task } from '../../domain/task'
 
 export default function Dashboard() {
   const today = new Date()
-  const { tasks, setTasks } = useTasks()
+  const {
+    tasks,
+    setTasks,
+    addTask: addStoredTask,
+    updateTask: updateStoredTask,
+    toggleTask: toggleStoredTask,
+    removeTask: removeStoredTask,
+  } = useTasks()
   const [selectedDay, setSelectedDay] = useState(
     new Date(today.getFullYear(), today.getMonth(), today.getDate()),
   )
-  const [isDialogOpen, setIsDialogOpen] = useState(false)
-  const [editingTaskId, setEditingTaskId] = useState<number | null>(null)
+  const {
+    isOpen: isDialogOpen,
+    editingId: editingTaskId,
+    openCreate: openTaskDialog,
+    openEdit: openTaskEditDialog,
+    close: closeTaskDialog,
+  } = useDialog<number>()
   const [form, setForm] = useState<TaskForm>({
     title: '',
     date: dateKey(selectedDay),
@@ -40,10 +54,14 @@ export default function Dashboard() {
   })
   const [activeTaskId, setActiveTaskId] = useState<number | null>(null)
   const [openMenuTaskId, setOpenMenuTaskId] = useState<number | null>(null)
-  const [elapsedSeconds, setElapsedSeconds] = useState(0)
-  const [isTimerRunning, setIsTimerRunning] = useState(true)
   const [isTimerFullscreen, setIsTimerFullscreen] = useState(false)
   const timerPanelRef = useRef<HTMLElement>(null)
+  const {
+    elapsedSeconds,
+    isRunning: isTimerRunning,
+    setIsRunning: setIsTimerRunning,
+    reset: resetTimer,
+  } = useTaskTimer(activeTaskId !== null)
   const selectedDateKey = dateKey(selectedDay)
   const visibleTasks = useMemo(
     () => tasks.filter((task) => matchesRecurrence(task, selectedDateKey)),
@@ -55,34 +73,55 @@ export default function Dashboard() {
     : 0
 
   const closeDialog = () => {
-    setIsDialogOpen(false)
-    setEditingTaskId(null)
+    closeTaskDialog()
     setForm({ title: '', date: dateKey(selectedDay), endDate: '', startTime: '', endTime: '', description: '', repeats: false, frequency: 'weekly', weekdays: [] })
   }
 
   const openEditDialog = (task: Task) => {
-    setEditingTaskId(task.id)
+    openTaskEditDialog(task.id)
     setForm({ title: task.title, date: task.date ?? dateKey(selectedDay), endDate: task.recurrence?.endDate ?? '', startTime: task.startTime, endTime: task.endTime, description: task.description, repeats: Boolean(task.recurrence), frequency: task.recurrence?.frequency ?? 'weekly', weekdays: task.recurrence?.weekdays ?? [] })
     setOpenMenuTaskId(null)
-    setIsDialogOpen(true)
   }
 
   const addTask = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     if (!form.title.trim()) return
-    setTasks((current) => {
-      const recurrence = form.repeats ? { frequency: form.frequency, startDate: form.date, ...(form.endDate ? { endDate: form.endDate } : {}), ...(form.frequency === 'custom' ? { weekdays: form.weekdays } : {}) } : undefined
-      if (editingTaskId !== null) return current.map((task) => task.id === editingTaskId ? { ...task, date: form.date, recurrence, title: form.title.trim(), description: form.description.trim(), startTime: form.startTime, endTime: form.endTime } : task).sort((a, b) => a.startTime.localeCompare(b.startTime))
-      return [...current, { id: Date.now(), date: form.date, recurrence, title: form.title.trim(), description: form.description.trim(), startTime: form.startTime, endTime: form.endTime, completed: false, investedSeconds: 0 }].sort((a, b) => a.startTime.localeCompare(b.startTime))
-    })
+
+    const recurrence = form.repeats
+      ? {
+        frequency: form.frequency,
+        startDate: form.date,
+        ...(form.endDate ? { endDate: form.endDate } : {}),
+        ...(form.frequency === 'custom' ? { weekdays: form.weekdays } : {}),
+      }
+      : undefined
+    const details = {
+      date: form.date,
+      recurrence,
+      title: form.title.trim(),
+      description: form.description.trim(),
+      startTime: form.startTime,
+      endTime: form.endTime,
+    }
+
+    if (editingTaskId !== null) {
+      updateStoredTask(editingTaskId, details)
+    } else {
+      addStoredTask({
+        ...details,
+        completed: false,
+        investedSeconds: 0,
+      })
+    }
+
     closeDialog()
   }
 
-  const toggleTask = (id: number) => setTasks((current) => current.map((task) => task.id === id ? { ...task, completed: !task.completed } : task))
+  const toggleTask = (id: number) => toggleStoredTask(id)
   const planProjectTask = (id: number) => setTasks((current) => current.map((task) => task.id === id ? { ...task, plannedForDate: dateKey(new Date()) } : task))
   const removeProjectTaskFromPlan = (id: number) => setTasks((current) => current.map((task) => task.id === id ? { ...task, plannedForDate: undefined } : task))
   const removeTask = (id: number) => {
-    setTasks((current) => current.filter((task) => task.id !== id))
+    removeStoredTask(id)
     setOpenMenuTaskId(null)
   }
   const activeTask = tasks.find((task) => task.id === activeTaskId)
@@ -101,15 +140,9 @@ export default function Dashboard() {
     return next
   })
 
-  useEffect(() => {
-    if (!activeTask || !isTimerRunning) return
-    const timer = window.setInterval(() => setElapsedSeconds((seconds) => seconds + 1), 1000)
-    return () => window.clearInterval(timer)
-  }, [activeTask, isTimerRunning])
-
   const startWorkMode = (id: number) => {
     setActiveTaskId(id)
-    setElapsedSeconds(0)
+    resetTimer()
     setIsTimerRunning(true)
   }
 
@@ -120,7 +153,7 @@ export default function Dashboard() {
       setTasks((current) => current.map((task) => task.id === activeTaskId ? { ...task, completed: true } : task))
     }
     setActiveTaskId(null)
-    setElapsedSeconds(0)
+    resetTimer()
   }
 
   const toggleTimerFullscreen = async () => {
@@ -166,7 +199,7 @@ export default function Dashboard() {
         timerPanelRef={timerPanelRef}
         onClose={() => closeWorkMode()}
         onToggleTimer={() => setIsTimerRunning((running) => !running)}
-        onResetTimer={() => setElapsedSeconds(0)}
+        onResetTimer={resetTimer}
         onCompleteTask={() => closeWorkMode(true)}
         onToggleFullscreen={toggleTimerFullscreen}
       />
@@ -229,8 +262,7 @@ export default function Dashboard() {
                       frequency: 'weekly',
                       weekdays: [],
                     })
-                    setEditingTaskId(null)
-                    setIsDialogOpen(true)
+                    openTaskDialog()
                   }}
                 >
                   <span>＋</span> Aufgabe hinzufügen

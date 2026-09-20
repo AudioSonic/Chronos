@@ -5,6 +5,7 @@ import MilestoneModal, { type MilestoneForm } from './MilestoneModal'
 import type { Milestone } from '../../../../domain/milestone'
 import { milestoneStorage } from '../../../../services/storage/milestoneStorage'
 import { taskStorage } from '../../../../services/storage/taskStorage'
+import useMilestones from '../../../../hooks/useMilestones'
 type Task = { id: number; completed: boolean; investedSeconds?: number; projectId?: number; milestoneId?: number }
 const key = 'chronos.milestones'
 const read = <T,>(name: string): T[] => name === key
@@ -13,7 +14,7 @@ const read = <T,>(name: string): T[] => name === key
 const date = (v: string) => v ? new Intl.DateTimeFormat('de-DE').format(new Date(`${v}T12:00:00`)) : '–'
 const empty: MilestoneForm = { title: '', description: '', startDate: '', endDate: '', status: 'Geplant' }
 export default function ProjectMilestones({ project }: { project: Project }) {
-  const [items, setItems] = useState<Milestone[]>(() => milestoneStorage.read().filter((m) => m.projectId === project.id).map((m) => ({ ...m, status: m.status || 'Geplant' })))
+  const { milestones: items, setMilestones: setItems } = useMilestones(project.id)
   const [form, setForm] = useState(empty); const [open, setOpen] = useState(false); const [editing, setEditing] = useState<number | null>(null); const [menu, setMenu] = useState<number | null>(null)
   const save = (next: Milestone[]) => { milestoneStorage.save([...milestoneStorage.read().filter((m) => m.projectId !== project.id), ...next]); setItems(next) }
   const submit = (e: FormEvent) => { e.preventDefault(); if (!form.title.trim()) return; const next = editing === null ? [...items, { ...form, title: form.title.trim(), id: Date.now(), projectId: project.id }] : items.map((m) => m.id === editing ? { ...m, ...form, title: form.title.trim() } : m); save(next); setOpen(false) }

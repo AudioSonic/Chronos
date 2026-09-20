@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react'
 import IconCalender from '../../Assets/icon_calender.svg'
+import useCalendar from '../../hooks/useCalendar'
 
 type CalendarProps = {
   selectedDate: Date
@@ -21,13 +21,7 @@ const startOfCalendar = (date: Date) => {
 
 export default function Calendar({ selectedDate, onDateSelect }: CalendarProps) {
   const today = new Date()
-  const [displayMonth, setDisplayMonth] = useState(
-    new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1),
-  )
-
-  useEffect(() => {
-    setDisplayMonth(new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1))
-  }, [selectedDate])
+  const { displayMonth, changeMonth, goToToday } = useCalendar(selectedDate, onDateSelect)
 
   const calendarStart = startOfCalendar(displayMonth)
   const days = Array.from({ length: 42 }, (_, index) => {
@@ -36,18 +30,6 @@ export default function Calendar({ selectedDate, onDateSelect }: CalendarProps) 
     return date
   })
   const selectedKey = selectedDate.toDateString()
-
-  const changeMonth = (offset: number) => {
-    setDisplayMonth(
-      (current) => new Date(current.getFullYear(), current.getMonth() + offset, 1),
-    )
-  }
-
-  const goToToday = () => {
-    const current = new Date()
-    setDisplayMonth(new Date(current.getFullYear(), current.getMonth(), 1))
-    onDateSelect(new Date(current.getFullYear(), current.getMonth(), current.getDate()))
-  }
 
   return (
     <section className="calendar-panel" aria-label="Kalender">

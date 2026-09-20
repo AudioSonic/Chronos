@@ -1,5 +1,5 @@
 import type { CSSProperties, RefObject } from 'react'
-import type { Task } from './Dashboard'
+import type { Task } from '../../domain/task'
 import IconFullScreen from '../../Assets/icon full screen.svg'
 import { formatDuration } from './dashboardUtils'
 

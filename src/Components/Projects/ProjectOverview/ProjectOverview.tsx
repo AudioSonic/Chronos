@@ -3,14 +3,14 @@ import ProjectCard from './ProjectCard'
 import ProjectFilters from './ProjectFilters'
 import './ProjectOverview.css'
 import { projectCategories, type Project } from '../projectTypes'
-import { readStorage, writeStorage } from '../projectStorage'
+import { projectStorage } from '../../../services/storage/projectStorage'
 export type { Project } from '../projectTypes'
 export { projectCategories } from '../projectTypes'
-const defaultCover = 'default'; const projectsStorageKey = 'chronos.projects'
-const loadProjects = (): Project[] => readStorage<unknown[]>(projectsStorageKey, []).filter((project): project is Project => Boolean(project && typeof project === 'object')).map((project) => ({ ...project, id: typeof project.id === 'number' ? project.id : Date.now() + Math.floor(Math.random() * 100000) }))
+const defaultCover = 'default'
+const loadProjects = (): Project[] => projectStorage.read().map((project) => ({ ...project, id: typeof project.id === 'number' ? project.id : Date.now() + Math.floor(Math.random() * 100000) }))
 export default function ProjectOverview({ onOpenProject }: { onOpenProject: (project: Project) => void }) {
   const [projects, setProjects] = useState<Project[]>(loadProjects); const [isCreateOpen, setIsCreateOpen] = useState(false); const [draftTags, setDraftTags] = useState<string[]>([])
-  useEffect(() => { writeStorage(projectsStorageKey, projects) }, [projects])
+  useEffect(() => { projectStorage.save(projects) }, [projects])
   const createProject = (event: FormEvent<HTMLFormElement>) => { event.preventDefault(); const form = new FormData(event.currentTarget); const startDate = String(form.get('startDate') || ''); const endDate = String(form.get('endDate') || ''); if (startDate && endDate && endDate < startDate) { const input = event.currentTarget.elements.namedItem('endDate') as HTMLInputElement; input.setCustomValidity('Das Enddatum darf nicht vor dem Beginndatum liegen.'); input.reportValidity(); return } const pendingTags = String(form.get('tagInput') || '').split(',').map((tag) => tag.trim()).filter(Boolean); const tags = [...draftTags, ...pendingTags.filter((tag) => !draftTags.includes(tag))]; const project: Project = { id: Date.now(), name: String(form.get('name')).trim(), description: String(form.get('description') || ''), goal: String(form.get('goal') || ''), category: String(form.get('category') || projectCategories[0]), tags, progress: 0, tasks: '0 / 0 Tasks', dates: startDate ? `${startDate} – ${endDate || 'offen'}` : 'Kein Zeitraum', status: (form.get('status') as Project['status']) || 'Offen', startDate, endDate, image: String(form.get('image') || defaultCover) }; setProjects((current) => [...current, project]); setIsCreateOpen(false); setDraftTags([]) }
   const updateImage = (event: ChangeEvent<HTMLInputElement>) => { const file = event.target.files?.[0]; if (!file) return; const reader = new FileReader(); reader.onload = () => { const image = event.target.form?.elements.namedItem('image') as HTMLInputElement | null; if (image) image.value = String(reader.result) }; reader.readAsDataURL(file) }
   const addTags = (event: KeyboardEvent<HTMLInputElement>) => { if (event.key !== 'Enter') return; event.preventDefault(); const values = event.currentTarget.value.split(',').map((tag) => tag.trim()).filter(Boolean); setDraftTags((current) => [...current, ...values.filter((tag) => !current.includes(tag))]); event.currentTarget.value = '' }

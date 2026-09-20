@@ -1,5 +1,5 @@
 import type { CSSProperties } from 'react'
-import type { Task } from './Dashboard'
+import type { Task } from '../../domain/task'
 import { formatInvestedTime } from './dashboardUtils'
 
 type DaySummaryProps = {

@@ -1,4 +1,4 @@
-import type { Task } from './Dashboard'
+import type { Task } from '../../domain/task'
 
 type Project = { id: number; name: string }
 const format = (date: string) => new Intl.DateTimeFormat('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' }).format(new Date(`${date}T12:00:00`))

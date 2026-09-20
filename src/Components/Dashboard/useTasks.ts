@@ -1,25 +1,12 @@
 import { useEffect, useState } from 'react'
-import type { Task } from './Dashboard'
-
-const storageKey = 'chronos.tasks'
-
-const loadTasks = (): Task[] => {
-  try {
-    const stored = localStorage.getItem(storageKey)
-    if (!stored) return []
-
-    const parsed: unknown = JSON.parse(stored)
-    return Array.isArray(parsed) ? parsed as Task[] : []
-  } catch {
-    return []
-  }
-}
+import type { Task } from '../../domain/task'
+import { taskStorage } from '../../services/storage/taskStorage'
 
 export default function useTasks() {
-  const [tasks, setTasks] = useState<Task[]>(loadTasks)
+  const [tasks, setTasks] = useState<Task[]>(taskStorage.read)
 
   useEffect(() => {
-    localStorage.setItem(storageKey, JSON.stringify(tasks))
+    taskStorage.save(tasks)
   }, [tasks])
 
   return { tasks, setTasks }

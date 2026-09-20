@@ -8,6 +8,7 @@ import DaySummary from './DaySummary'
 import WorkMode from './WorkMode'
 import TaskDialog, { type TaskForm } from './TaskDialog'
 import useTasks from './useTasks'
+import type { Task } from '../../domain/task'
 import {
   dateKey,
   formatDate,
@@ -16,26 +17,7 @@ import {
   shortDateFormatter,
 } from './dashboardUtils'
 
-export type Task = {
-  id: number
-  date: string
-  title: string
-  description: string
-  startTime: string
-  endTime: string
-  completed: boolean
-  investedSeconds: number
-  recurrence?: {
-    frequency: 'daily' | 'weekly' | 'monthly' | 'yearly' | 'custom'
-    startDate: string
-    endDate?: string
-    weekdays?: number[]
-  }
-  projectId?: number
-  milestoneId?: number
-  dueDate?: string
-  plannedForDate?: string
-}
+export type { Task } from '../../domain/task'
 
 export default function Dashboard() {
   const today = new Date()
@@ -80,7 +62,7 @@ export default function Dashboard() {
 
   const openEditDialog = (task: Task) => {
     setEditingTaskId(task.id)
-    setForm({ title: task.title, date: task.date, endDate: task.recurrence?.endDate ?? '', startTime: task.startTime, endTime: task.endTime, description: task.description, repeats: Boolean(task.recurrence), frequency: task.recurrence?.frequency ?? 'weekly', weekdays: task.recurrence?.weekdays ?? [] })
+    setForm({ title: task.title, date: task.date ?? dateKey(selectedDay), endDate: task.recurrence?.endDate ?? '', startTime: task.startTime, endTime: task.endTime, description: task.description, repeats: Boolean(task.recurrence), frequency: task.recurrence?.frequency ?? 'weekly', weekdays: task.recurrence?.weekdays ?? [] })
     setOpenMenuTaskId(null)
     setIsDialogOpen(true)
   }

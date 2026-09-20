@@ -1,4 +1,4 @@
-import type { Task } from './Dashboard'
+import type { Task } from '../../domain/task'
 import { formatTaskTime } from './dashboardUtils'
 
 type TaskCardProps = {

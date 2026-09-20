@@ -6,6 +6,7 @@ import ResourcesOverview from './resources/ResourcesOverview'
 import './ProjectDetails.css'
 import ProjectTasks from './tasks/ProjectTasks'
 import ProjectMilestones from './milestones/ProjectMilestones'
+import { taskStorage } from '../../../services/storage/taskStorage'
 
 const tabs = ['Aufgaben', 'Milestones', 'Dokumentation', 'Ressourcen', 'Einstellungen']
 const formatTotalTime = (seconds: number) => `${Math.floor(seconds / 3600).toString().padStart(2, '0')}:${Math.floor(seconds % 3600 / 60).toString().padStart(2, '0')} h`
@@ -17,7 +18,9 @@ export default function ProjectDetails({ project, onBack }: { project: Project; 
   const [taskTotal, setTaskTotal] = useState(0)
   const updateProgress = useCallback((completed: number, total: number) => { setProgress(total ? Math.round(completed / total * 100) : 0); setTaskTotal(total); setCompletedTasks(completed) }, [])
   const [completedTasks, setCompletedTasks] = useState(0)
-  const totalInvestedSeconds = (() => { try { const tasks = JSON.parse(localStorage.getItem('chronos.tasks') || '[]') as { projectId?: number; investedSeconds?: number }[]; return tasks.filter((task) => task.projectId === project.id).reduce((total, task) => total + (task.investedSeconds || 0), 0) } catch { return 0 } })()
+  const totalInvestedSeconds = taskStorage.read()
+    .filter((task) => task.projectId === project.id)
+    .reduce((total, task) => total + (task.investedSeconds || 0), 0)
 
   return <section className="project-details">
     <div className="project-breadcrumb"><button type="button" onClick={onBack}>Projekte</button><span>›</span><strong>{project.name}</strong></div>

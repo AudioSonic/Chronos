@@ -1,4 +1,4 @@
-import type { Task } from './Dashboard'
+import type { Task } from '../../domain/task'
 
 export const formatDate = new Intl.DateTimeFormat('de-DE', {
   weekday: 'long',
@@ -52,7 +52,7 @@ const parseDateKey = (key: string) => {
 
 export const matchesRecurrence = (task: Task, key: string) => {
   if (task.projectId !== undefined) return task.plannedForDate === key
-  if (!task.recurrence) return task.date === key
+  if (!task.recurrence) return (task.date ?? '') === key
 
   const current = parseDateKey(key)
   const start = parseDateKey(task.recurrence.startDate)

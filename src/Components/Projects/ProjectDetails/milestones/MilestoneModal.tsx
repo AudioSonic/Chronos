@@ -1,6 +1,5 @@
 import type { Dispatch, FormEvent, SetStateAction } from 'react'
-
-export type MilestoneStatus = 'Geplant' | 'Aktiv' | 'Abgeschlossen'
+import type { MilestoneStatus } from '../../../../types/common'
 
 export type MilestoneForm = {
   title: string

@@ -1,10 +1,70 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import type { Project } from '../../projectTypes'
+import type { Task } from '../../../../domain/task'
+import type { Milestone } from '../../../../domain/milestone'
+import { taskStorage } from '../../../../services/storage/taskStorage'
+import { milestoneStorage } from '../../../../services/storage/milestoneStorage'
 import ProjectTaskModal, { type ProjectTaskForm } from './ProjectTaskModal'
-type Task={id:number;title:string;description:string;dueDate:string;startTime:string;endTime:string;completed:boolean;investedSeconds:number;projectId?:number;milestoneId?:number}; type Milestone={id:number;title:string;projectId:number}
-const read=<T,>(key:string):T[]=>{try{const v=JSON.parse(localStorage.getItem(key)||'[]');return Array.isArray(v)?v:[]}catch{return[]}}; const empty={title:'',description:'',dueDate:'',milestoneId:''}; const fmt=(v:string)=>v?new Intl.DateTimeFormat('de-DE').format(new Date(`${v}T12:00:00`)):'Keine Fälligkeit'; const fmtTime=(s:number)=>`${String(Math.floor(s/3600)).padStart(2,'0')}:${String(Math.floor(s%3600/60)).padStart(2,'0')} h`
-export default function ProjectTasks({project,onProgress}:{project:Project;onProgress:(completed:number,total:number)=>void}){
- const [tasks,setTasks]=useState<Task[]>(()=>read<Task>('chronos.tasks').filter(t=>t.projectId===project.id)); const [milestones]=useState<Milestone[]>(()=>read<Milestone>('chronos.milestones').filter(m=>m.projectId===project.id)); const [form,setForm]=useState<ProjectTaskForm>(empty); const [open,setOpen]=useState(false); const [editing,setEditing]=useState<number|null>(null); const [menu,setMenu]=useState<number|null>(null)
- const refresh=(next:Task[])=>{localStorage.setItem('chronos.tasks',JSON.stringify([...read<Task>('chronos.tasks').filter(t=>t.projectId!==project.id),...next]));setTasks(next)}; useEffect(()=>onProgress(tasks.filter(t=>t.completed).length,tasks.length),[tasks,onProgress]); const edit=(t:Task)=>{setEditing(t.id);setForm({title:t.title,description:t.description,dueDate:t.dueDate||'',milestoneId:t.milestoneId?String(t.milestoneId):''});setMenu(null);setOpen(true)}; const submit=(e:FormEvent)=>{e.preventDefault();if(!form.title.trim())return;const milestoneId=form.milestoneId?Number(form.milestoneId):undefined;const details={title:form.title.trim(),description:form.description.trim(),dueDate:form.dueDate,milestoneId};const next=editing===null?[...tasks,{...details,id:Date.now(),startTime:'',endTime:'',completed:false,investedSeconds:0,projectId:project.id}]:tasks.map(t=>t.id===editing?{...t,...details}:t);refresh(next);setOpen(false);setEditing(null)}
- return <div className="project-task-content"><div className="project-task-heading"><div><h2>Aufgaben</h2><p>Verwalte die Aufgaben für dieses Projekt.</p></div><button className="primary-button" type="button" onClick={()=>{setEditing(null);setForm(empty);setOpen(true)}}>＋ Aufgabe hinzufügen</button></div><div className="project-task-list">{tasks.length?tasks.map(t=><article className={`project-task-card ${t.completed?'is-completed':''}`} key={t.id}><label className="task-checkbox"><input type="checkbox" checked={t.completed} onChange={()=>refresh(tasks.map(x=>x.id===t.id?{...x,completed:!x.completed}:x))}/><span>✓</span></label><div><h3>{t.title}</h3>{t.description&&<p>{t.description}</p>}<small>Fällig: {fmt(t.dueDate)}{t.startTime||t.endTime?` · ${t.startTime||'–'} – ${t.endTime||'–'}`:''}</small>{t.investedSeconds>0&&<small className="task-invested-time">Investiert: {fmtTime(t.investedSeconds)}</small>}</div><div className="project-task-options"><button type="button" onClick={()=>setMenu(menu===t.id?null:t.id)}>⋮</button>{menu===t.id&&<div className="project-task-menu"><button type="button" onClick={()=>edit(t)}>Aufgabe bearbeiten</button><button type="button" className="danger-option" onClick={()=>{refresh(tasks.filter(x=>x.id!==t.id));setMenu(null)}}>Aufgabe entfernen</button></div>}</div></article>):<div className="project-task-empty"><h3>Noch keine Aufgaben</h3><p>Füge die erste Aufgabe für dieses Projekt hinzu.</p></div>}</div>{open&&<ProjectTaskModal form={form} setForm={setForm} milestones={milestones} editing={editing} onSubmit={submit} onClose={()=>setOpen(false)} />}</div>
+
+const emptyForm: ProjectTaskForm = { title: '', description: '', dueDate: '', milestoneId: '' }
+const formatDate = (value?: string) => value ? new Intl.DateTimeFormat('de-DE').format(new Date(`${value}T12:00:00`)) : 'Keine Fälligkeit'
+const formatTime = (seconds: number) => `${String(Math.floor(seconds / 3600)).padStart(2, '0')}:${String(Math.floor(seconds % 3600 / 60)).padStart(2, '0')} h`
+
+type ProjectTasksProps = { project: Project; onProgress: (completed: number, total: number) => void }
+
+export default function ProjectTasks({ project, onProgress }: ProjectTasksProps) {
+  const [tasks, setTasks] = useState<Task[]>(() => taskStorage.read().filter((task) => task.projectId === project.id))
+  const [milestones] = useState<Milestone[]>(() => milestoneStorage.read().filter((milestone) => milestone.projectId === project.id))
+  const [form, setForm] = useState<ProjectTaskForm>(emptyForm)
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [editingId, setEditingId] = useState<number | null>(null)
+  const [openMenuId, setOpenMenuId] = useState<number | null>(null)
+
+  const saveTasks = (nextTasks: Task[]) => {
+    const otherTasks = taskStorage.read().filter((task) => task.projectId !== project.id)
+    taskStorage.save([...otherTasks, ...nextTasks])
+    setTasks(nextTasks)
+  }
+
+  useEffect(() => {
+    onProgress(tasks.filter((task) => task.completed).length, tasks.length)
+  }, [tasks, onProgress])
+
+  const editTask = (task: Task) => {
+    setEditingId(task.id)
+    setForm({ title: task.title, description: task.description, dueDate: task.dueDate || '', milestoneId: task.milestoneId ? String(task.milestoneId) : '' })
+    setOpenMenuId(null)
+    setIsModalOpen(true)
+  }
+
+  const submit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    if (!form.title.trim()) return
+    const details = { title: form.title.trim(), description: form.description.trim(), dueDate: form.dueDate, milestoneId: form.milestoneId ? Number(form.milestoneId) : undefined }
+    const nextTasks = editingId === null
+      ? [...tasks, { ...details, id: Date.now(), date: form.dueDate, startTime: '', endTime: '', completed: false, investedSeconds: 0, projectId: project.id }]
+      : tasks.map((task) => task.id === editingId ? { ...task, ...details } : task)
+    saveTasks(nextTasks)
+    setIsModalOpen(false)
+    setEditingId(null)
+  }
+
+  return (
+    <div className="project-task-content">
+      <div className="project-task-heading">
+        <div><h2>Aufgaben</h2><p>Verwalte die Aufgaben für dieses Projekt.</p></div>
+        <button className="primary-button" type="button" onClick={() => { setEditingId(null); setForm(emptyForm); setIsModalOpen(true) }}>＋ Aufgabe hinzufügen</button>
+      </div>
+      <div className="project-task-list">
+        {tasks.length ? tasks.map((task) => (
+          <article className={`project-task-card ${task.completed ? 'is-completed' : ''}`} key={task.id}>
+            <label className="task-checkbox"><input type="checkbox" checked={task.completed} onChange={() => saveTasks(tasks.map((item) => item.id === task.id ? { ...item, completed: !item.completed } : item))} /><span>✓</span></label>
+            <div><h3>{task.title}</h3>{task.description && <p>{task.description}</p>}<small>Fällig: {formatDate(task.dueDate)}{task.startTime || task.endTime ? ` · ${task.startTime || '–'} – ${task.endTime || '–'}` : ''}</small>{task.investedSeconds > 0 && <small className="task-invested-time">Investiert: {formatTime(task.investedSeconds)}</small>}</div>
+            <div className="project-task-options"><button type="button" onClick={() => setOpenMenuId(openMenuId === task.id ? null : task.id)}>⋮</button>{openMenuId === task.id && <div className="project-task-menu"><button type="button" onClick={() => editTask(task)}>Aufgabe bearbeiten</button><button type="button" className="danger-option" onClick={() => { saveTasks(tasks.filter((item) => item.id !== task.id)); setOpenMenuId(null) }}>Aufgabe entfernen</button></div>}</div>
+          </article>
+        )) : <div className="project-task-empty"><h3>Noch keine Aufgaben</h3><p>Füge die erste Aufgabe für dieses Projekt hinzu.</p></div>}
+      </div>
+      {isModalOpen && <ProjectTaskModal form={form} setForm={setForm} milestones={milestones} editing={editingId} onSubmit={submit} onClose={() => { setIsModalOpen(false); setEditingId(null) }} />}
+    </div>
+  )
 }

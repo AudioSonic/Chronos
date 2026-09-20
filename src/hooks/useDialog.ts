@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 export default function useDialog<T = number>() {
   const [isOpen, setIsOpen] = useState(false)
@@ -7,6 +7,13 @@ export default function useDialog<T = number>() {
   const openCreate = () => { setEditingId(null); setIsOpen(true) }
   const openEdit = (id: T) => { setEditingId(id); setIsOpen(true) }
   const close = () => { setIsOpen(false); setEditingId(null) }
+
+  useEffect(() => {
+    if (!isOpen) return
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => { document.body.style.overflow = previousOverflow }
+  }, [isOpen])
 
   return { isOpen, editingId, openCreate, openEdit, close }
 }

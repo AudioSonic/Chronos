@@ -3,12 +3,20 @@ import type { Task } from '../../domain/task'
 import { taskStorage } from '../../services/storage/taskStorage'
 import { createId } from '../../services/storage/storageUtils'
 
-export default function useTasks() {
-  const [tasks, setTasks] = useState<Task[]>(taskStorage.read)
+export default function useTasks(projectId?: number) {
+  const [tasks, setTasks] = useState<Task[]>(() => {
+    const allTasks = taskStorage.read()
+    return projectId === undefined ? allTasks : allTasks.filter((task) => task.projectId === projectId)
+  })
 
   useEffect(() => {
-    taskStorage.save(tasks)
-  }, [tasks])
+    if (projectId === undefined) {
+      taskStorage.save(tasks)
+      return
+    }
+    const otherTasks = taskStorage.read().filter((task) => task.projectId !== projectId)
+    taskStorage.save([...otherTasks, ...tasks])
+  }, [tasks, projectId])
 
   const addTask = (task: Omit<Task, 'id'>) => {
     const nextTask = { ...task, id: createId() }

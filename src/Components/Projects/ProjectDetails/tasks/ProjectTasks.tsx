@@ -2,9 +2,10 @@ import { useEffect, useState, type FormEvent } from 'react'
 import type { Project } from '../../projectTypes'
 import type { Task } from '../../../../domain/task'
 import type { Milestone } from '../../../../domain/milestone'
-import { taskStorage } from '../../../../services/storage/taskStorage'
 import { milestoneStorage } from '../../../../services/storage/milestoneStorage'
 import ProjectTaskModal, { type ProjectTaskForm } from './ProjectTaskModal'
+import useTasks from '../../../Dashboard/useTasks'
+import useDialog from '../../../../hooks/useDialog'
 
 const emptyForm: ProjectTaskForm = { title: '', description: '', dueDate: '', milestoneId: '' }
 const formatDate = (value?: string) => value ? new Intl.DateTimeFormat('de-DE').format(new Date(`${value}T12:00:00`)) : 'Keine Fälligkeit'
@@ -13,16 +14,13 @@ const formatTime = (seconds: number) => `${String(Math.floor(seconds / 3600)).pa
 type ProjectTasksProps = { project: Project; onProgress: (completed: number, total: number) => void }
 
 export default function ProjectTasks({ project, onProgress }: ProjectTasksProps) {
-  const [tasks, setTasks] = useState<Task[]>(() => taskStorage.read().filter((task) => task.projectId === project.id))
+  const { tasks, setTasks } = useTasks(project.id)
   const [milestones] = useState<Milestone[]>(() => milestoneStorage.read().filter((milestone) => milestone.projectId === project.id))
   const [form, setForm] = useState<ProjectTaskForm>(emptyForm)
-  const [isModalOpen, setIsModalOpen] = useState(false)
-  const [editingId, setEditingId] = useState<number | null>(null)
+  const { isOpen: isModalOpen, editingId, openCreate, openEdit, close } = useDialog<number>()
   const [openMenuId, setOpenMenuId] = useState<number | null>(null)
 
   const saveTasks = (nextTasks: Task[]) => {
-    const otherTasks = taskStorage.read().filter((task) => task.projectId !== project.id)
-    taskStorage.save([...otherTasks, ...nextTasks])
     setTasks(nextTasks)
   }
 
@@ -31,10 +29,10 @@ export default function ProjectTasks({ project, onProgress }: ProjectTasksProps)
   }, [tasks, onProgress])
 
   const editTask = (task: Task) => {
-    setEditingId(task.id)
+    openEdit(task.id)
     setForm({ title: task.title, description: task.description, dueDate: task.dueDate || '', milestoneId: task.milestoneId ? String(task.milestoneId) : '' })
     setOpenMenuId(null)
-    setIsModalOpen(true)
+    
   }
 
   const submit = (event: FormEvent<HTMLFormElement>) => {
@@ -45,15 +43,14 @@ export default function ProjectTasks({ project, onProgress }: ProjectTasksProps)
       ? [...tasks, { ...details, id: Date.now(), date: form.dueDate, startTime: '', endTime: '', completed: false, investedSeconds: 0, projectId: project.id }]
       : tasks.map((task) => task.id === editingId ? { ...task, ...details } : task)
     saveTasks(nextTasks)
-    setIsModalOpen(false)
-    setEditingId(null)
+    close()
   }
 
   return (
     <div className="project-task-content">
       <div className="project-task-heading">
         <div><h2>Aufgaben</h2><p>Verwalte die Aufgaben für dieses Projekt.</p></div>
-        <button className="primary-button" type="button" onClick={() => { setEditingId(null); setForm(emptyForm); setIsModalOpen(true) }}>＋ Aufgabe hinzufügen</button>
+        <button className="primary-button" type="button" onClick={() => { setForm(emptyForm); openCreate() }}>＋ Aufgabe hinzufügen</button>
       </div>
       <div className="project-task-list">
         {tasks.length ? tasks.map((task) => (
@@ -64,7 +61,7 @@ export default function ProjectTasks({ project, onProgress }: ProjectTasksProps)
           </article>
         )) : <div className="project-task-empty"><h3>Noch keine Aufgaben</h3><p>Füge die erste Aufgabe für dieses Projekt hinzu.</p></div>}
       </div>
-      {isModalOpen && <ProjectTaskModal form={form} setForm={setForm} milestones={milestones} editing={editingId} onSubmit={submit} onClose={() => { setIsModalOpen(false); setEditingId(null) }} />}
+      {isModalOpen && <ProjectTaskModal form={form} setForm={setForm} milestones={milestones} editing={editingId} onSubmit={submit} onClose={close} />}
     </div>
   )
 }

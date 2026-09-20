@@ -1,4 +1,3 @@
-import type { Task } from '../../domain/task'
 
 export const formatDate = new Intl.DateTimeFormat('de-DE', {
   weekday: 'long',
@@ -44,32 +43,3 @@ export const formatTaskTime = (seconds: number) => {
 
 export const dateKey = (date: Date) =>
   `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
-
-const parseDateKey = (key: string) => {
-  const [year, month, day] = key.split('-').map(Number)
-  return new Date(year, month - 1, day)
-}
-
-export const matchesRecurrence = (task: Task, key: string) => {
-  if (task.projectId !== undefined) return task.plannedForDate === key
-  if (!task.recurrence) return (task.date ?? '') === key
-
-  const current = parseDateKey(key)
-  const start = parseDateKey(task.recurrence.startDate)
-
-  if (
-    current < start ||
-    (task.recurrence.endDate && current > parseDateKey(task.recurrence.endDate))
-  ) {
-    return false
-  }
-
-  if (task.recurrence.frequency === 'daily') return true
-  if (task.recurrence.frequency === 'weekly') return current.getDay() === start.getDay()
-  if (task.recurrence.frequency === 'monthly') return current.getDate() === start.getDate()
-  if (task.recurrence.frequency === 'yearly') {
-    return current.getDate() === start.getDate() && current.getMonth() === start.getMonth()
-  }
-
-  return task.recurrence.weekdays?.includes(current.getDay()) ?? false
-}

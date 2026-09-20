@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useMemo, useRef, useState } from 'react'
+import { FormEvent, useMemo, useRef, useState } from 'react'
 import './Dashboard.css'
 import IconToday from '../../Assets/icon_today.svg'
 import ProjectTaskPool from './ProjectTaskPool'
@@ -8,13 +8,15 @@ import DaySummary from './DaySummary'
 import WorkMode from './WorkMode'
 import TaskDialog, { type TaskForm } from './TaskDialog'
 import useTasks from './useTasks'
-import type { Task } from '../../domain/task'
+import { matchesRecurrence, type Task } from '../../domain/task'
 import useTaskTimer from '../../hooks/useTaskTimer'
 import useDialog from '../../hooks/useDialog'
+import useWorkMode from '../../hooks/useWorkMode'
+import { projectStorage } from '../../services/storage/projectStorage'
+import { milestoneStorage } from '../../services/storage/milestoneStorage'
 import {
   dateKey,
   formatDate,
-  matchesRecurrence,
   secondsBetween,
   shortDateFormatter,
 } from './dashboardUtils'
@@ -54,7 +56,6 @@ export default function Dashboard() {
   })
   const [activeTaskId, setActiveTaskId] = useState<number | null>(null)
   const [openMenuTaskId, setOpenMenuTaskId] = useState<number | null>(null)
-  const [isTimerFullscreen, setIsTimerFullscreen] = useState(false)
   const timerPanelRef = useRef<HTMLElement>(null)
   const {
     elapsedSeconds,
@@ -62,6 +63,7 @@ export default function Dashboard() {
     setIsRunning: setIsTimerRunning,
     reset: resetTimer,
   } = useTaskTimer(activeTaskId !== null)
+  const { isFullscreen, start, close, toggleFullscreen } = useWorkMode({ setTasks, resetTimer, timerPanelRef })
   const selectedDateKey = dateKey(selectedDay)
   const visibleTasks = useMemo(
     () => tasks.filter((task) => matchesRecurrence(task, selectedDateKey)),
@@ -125,14 +127,14 @@ export default function Dashboard() {
     setOpenMenuTaskId(null)
   }
   const activeTask = tasks.find((task) => task.id === activeTaskId)
-  const projectNames = new Map<number, string>()
-  const milestoneNames = new Map<number, string>()
-  try {
-    const projects = JSON.parse(localStorage.getItem('chronos.projects') || '[]') as { id: number; name: string }[]
-    const milestones = JSON.parse(localStorage.getItem('chronos.milestones') || '[]') as { id: number; title: string }[]
-    projects.forEach((project) => projectNames.set(project.id, project.name))
-    milestones.forEach((milestone) => milestoneNames.set(milestone.id, milestone.title))
-  } catch { /* Ungültige optionale Metadaten werden ignoriert. */ }
+  const projectNames = useMemo(
+    () => new Map(projectStorage.read().map((project) => [project.id, project.name])),
+    [tasks],
+  )
+  const milestoneNames = useMemo(
+    () => new Map(milestoneStorage.read().map((milestone) => [milestone.id, milestone.title])),
+    [tasks],
+  )
 
   const changeSelectedDay = (offset: number) => setSelectedDay((current) => {
     const next = new Date(current)
@@ -142,41 +144,14 @@ export default function Dashboard() {
 
   const startWorkMode = (id: number) => {
     setActiveTaskId(id)
-    resetTimer()
+    start(id, resetTimer)
     setIsTimerRunning(true)
   }
 
   const closeWorkMode = (completeTask = false) => {
-    if (activeTaskId !== null && elapsedSeconds > 0) {
-      setTasks((current) => current.map((task) => task.id === activeTaskId ? { ...task, investedSeconds: task.investedSeconds + elapsedSeconds, completed: completeTask ? true : task.completed } : task))
-    } else if (activeTaskId !== null && completeTask) {
-      setTasks((current) => current.map((task) => task.id === activeTaskId ? { ...task, completed: true } : task))
-    }
+    close(elapsedSeconds, completeTask)
     setActiveTaskId(null)
-    resetTimer()
   }
-
-  const toggleTimerFullscreen = async () => {
-    if (!timerPanelRef.current) return
-    if (document.fullscreenElement) {
-      await document.exitFullscreen()
-    } else {
-      await timerPanelRef.current.requestFullscreen()
-    }
-  }
-
-  useEffect(() => {
-    const handleFullscreenChange = () => setIsTimerFullscreen(document.fullscreenElement === timerPanelRef.current)
-    document.addEventListener('fullscreenchange', handleFullscreenChange)
-    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange)
-  }, [])
-
-  useEffect(() => {
-    if (!isDialogOpen) return
-    const previousOverflow = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
-    return () => { document.body.style.overflow = previousOverflow }
-  }, [isDialogOpen])
 
   if (activeTask) {
     const plannedSeconds = secondsBetween(activeTask.startTime, activeTask.endTime)
@@ -195,13 +170,13 @@ export default function Dashboard() {
         plannedSeconds={plannedSeconds}
         timerProgress={timerProgress}
         isTimerRunning={isTimerRunning}
-        isTimerFullscreen={isTimerFullscreen}
+        isTimerFullscreen={isFullscreen}
         timerPanelRef={timerPanelRef}
         onClose={() => closeWorkMode()}
         onToggleTimer={() => setIsTimerRunning((running) => !running)}
         onResetTimer={resetTimer}
         onCompleteTask={() => closeWorkMode(true)}
-        onToggleFullscreen={toggleTimerFullscreen}
+        onToggleFullscreen={toggleFullscreen}
       />
     )
 

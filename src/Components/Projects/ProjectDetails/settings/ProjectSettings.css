@@ -7,3 +7,5 @@
 .settings-two-columns label { grid-template-columns: 1fr; gap: 8px; }
 .settings-two-columns .field-label { padding-top: 0; }
 @media (max-width: 600px) { .settings-card label { grid-template-columns: 1fr; gap: 8px; } .field-label { padding-top: 0; } }
+.management-button.dark { background: var(--color-accent-dark); }
+.settings-file-input { display: none; }

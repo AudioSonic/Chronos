@@ -1,5 +1,4 @@
 import type { ChangeEvent, FormEvent, KeyboardEvent } from 'react'
-import { projectCategories } from '../../../domain/project'
 
 type ProjectCreateModalProps = {
   draftTags: string[]
@@ -8,6 +7,7 @@ type ProjectCreateModalProps = {
   onClose: () => void
   onImageChange: (event: ChangeEvent<HTMLInputElement>) => void
   onTagKeyDown: (event: KeyboardEvent<HTMLInputElement>) => void
+  categories: string[]
 }
 
 export default function ProjectCreateModal({
@@ -17,6 +17,7 @@ export default function ProjectCreateModal({
   onClose,
   onImageChange,
   onTagKeyDown,
+  categories,
 }: ProjectCreateModalProps) {
   return (
     <div className="modal-backdrop" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && onClose()}>
@@ -32,7 +33,7 @@ export default function ProjectCreateModal({
         <form onSubmit={onSubmit}>
           <div className="form-grid">
             <label>Projektname *<input name="name" required autoFocus /></label>
-            <label>Kategorie<select name="category" defaultValue={projectCategories[0]}>{projectCategories.map((category) => <option key={category}>{category}</option>)}</select></label>
+            <label>Kategorie<select name="category" defaultValue={categories[0]}>{categories.map((category) => <option key={category}>{category}</option>)}</select></label>
             <label className="form-wide">Beschreibung<textarea name="description" rows={3} /></label>
             <label className="form-wide">Projektziel<textarea name="goal" rows={2} /></label>
             <label className="form-wide">Tags

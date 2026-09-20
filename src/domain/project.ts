@@ -23,4 +23,5 @@ export const projectCategories = [
   'Gaming',
   'Fitness',
   'Filme & Serien',
+  'Lesen',
 ] as const

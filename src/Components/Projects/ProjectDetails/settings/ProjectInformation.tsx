@@ -1,0 +1,2 @@
+import type { Project } from '../../projectTypes'
+export default function ProjectInformation({ project }: { project: Project }) { return <section className="settings-card"><h2>▤ &nbsp; Projektinformationen</h2><label><span className="field-label">Projektname <em>*</em></span><input name="name" defaultValue={project.name} required /></label><label><span className="field-label">Beschreibung <em>*</em></span><textarea name="description" defaultValue={project.description} rows={4} required /></label></section> }

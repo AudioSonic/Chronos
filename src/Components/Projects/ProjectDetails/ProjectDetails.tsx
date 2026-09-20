@@ -10,7 +10,7 @@ import { taskStorage } from '../../../services/storage/taskStorage'
 import ProjectHeader from './ProjectHeader'
 
 const tabs = ['Aufgaben', 'Milestones', 'Dokumentation', 'Ressourcen', 'Einstellungen']
-export default function ProjectDetails({ project, onBack }: { project: Project; onBack: () => void }) {
+export default function ProjectDetails({ project, onBack, onSave, onDelete, categories }: { project: Project; onBack: () => void; onSave: (changes: Partial<Project>) => void; onDelete: () => void; categories: string[] }) {
   const [activeTab, setActiveTab] = useState(tabs[0])
   const [progress, setProgress] = useState(project.progress)
   const [taskTotal, setTaskTotal] = useState(0)
@@ -23,6 +23,6 @@ export default function ProjectDetails({ project, onBack }: { project: Project; 
   return <section className="project-details">
     <ProjectHeader project={project} completedTasks={completedTasks} taskTotal={taskTotal} progress={progress} totalInvestedSeconds={totalInvestedSeconds} onBack={onBack} />
     <ProjectTabs tabs={tabs} activeTab={activeTab} onChange={setActiveTab} />
-    {activeTab === 'Aufgaben' ? <ProjectTasks project={project} onProgress={updateProgress} /> : activeTab === 'Milestones' ? <ProjectMilestones project={project} /> : activeTab === 'Einstellungen' ? <ProjectSettings project={project} /> : activeTab === 'Ressourcen' ? <ResourcesOverview /> : <div className="project-tab-content"><p>{activeTab} – Inhalte folgen.</p></div>}
+    {activeTab === 'Aufgaben' ? <ProjectTasks project={project} onProgress={updateProgress} /> : activeTab === 'Milestones' ? <ProjectMilestones project={project} /> : activeTab === 'Einstellungen' ? <ProjectSettings project={project} onSave={onSave} onDelete={onDelete} categories={categories} /> : activeTab === 'Ressourcen' ? <ResourcesOverview /> : <div className="project-tab-content"><p>{activeTab} – Inhalte folgen.</p></div>}
   </section>
 }

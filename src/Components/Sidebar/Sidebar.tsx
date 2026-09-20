@@ -49,7 +49,7 @@ export default function Sidebar({ activePage, onNavigate }: SidebarProps) {
         ))}
       </nav>
 
-      <a className="navigation-item settings-item" href="#">
+      <a className={`navigation-item settings-item ${activePage === 'settings' ? 'is-active' : ''}`} href="#settings" onClick={(event) => { event.preventDefault(); onNavigate('settings') }}>
         <span className="navigation-icon" aria-hidden="true">⚙</span>
         <span>Einstellungen</span>
       </a>

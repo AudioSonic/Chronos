@@ -1,1 +1,1 @@
-export type NavigationPage = 'dashboard' | 'projects'
+export type NavigationPage = 'dashboard' | 'projects' | 'settings'

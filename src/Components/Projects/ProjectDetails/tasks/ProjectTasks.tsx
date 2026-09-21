@@ -48,9 +48,9 @@ export default function ProjectTasks({ project, onProgress }: ProjectTasksProps)
   const submit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     if (!form.title.trim()) return
-    const details = { title: form.title.trim(), description: form.description.trim(), dueDate: form.dueDate, milestoneId: form.milestoneId ? Number(form.milestoneId) : undefined }
+    const details = { title: form.title.trim(), description: form.description.trim(), dueDate: form.dueDate || undefined, milestoneId: form.milestoneId ? Number(form.milestoneId) : undefined }
     const nextTasks = editingId === null
-      ? [...tasks, { ...details, id: Date.now(), date: form.dueDate, startTime: '', endTime: '', completed: false, investedSeconds: 0, projectId: project.id }]
+      ? [...tasks, { ...details, id: Date.now(), date: form.dueDate || undefined, startTime: '', endTime: '', completed: false, investedSeconds: 0, projectId: project.id }]
       : tasks.map((task) => task.id === editingId ? { ...task, ...details } : task)
     saveTasks(nextTasks)
     close()

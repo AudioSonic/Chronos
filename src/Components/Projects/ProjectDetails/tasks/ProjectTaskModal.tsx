@@ -38,7 +38,10 @@ export default function ProjectTaskModal({ form, setForm, milestones, editing, o
             </label>
             <label>
               Fälligkeitsdatum
-              <input type="date" value={form.dueDate} onChange={(event) => setForm({ ...form, dueDate: event.target.value })} />
+              <span className="date-field">
+                <input type="date" value={form.dueDate} onChange={(event) => setForm({ ...form, dueDate: event.target.value })} />
+                {form.dueDate && <button className="clear-date-button" type="button" onClick={() => setForm({ ...form, dueDate: '' })}>Fälligkeit entfernen</button>}
+              </span>
             </label>
             <label>
               Milestone

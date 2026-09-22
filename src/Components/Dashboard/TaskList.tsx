@@ -36,9 +36,13 @@ export default function TaskList({
     )
   }
 
+  const sortedTasks = [...tasks].sort((a, b) =>
+    a.startTime.localeCompare(b.startTime)
+  )
+
   return (
     <>
-      {tasks.map((task, index) => (
+      {sortedTasks.map((task, index) => (
         <TaskCard
           key={task.id}
           task={task}

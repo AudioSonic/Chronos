@@ -22,7 +22,8 @@ Das Dashboard ist der zentrale Einstiegspunkt für den täglichen Arbeitsablauf.
 - Projektaufgaben-Pool mit den Gruppen „Überfällig“, „Heute“ und „Demnächst“
 - Projektaufgaben können direkt für den heutigen Tagesplan eingeplant werden
 
-[Screenshot des Dashboards mit Kalender, Tagesplan und Tagesübersicht]
+<img width="1615" height="926" alt="grafik" src="https://github.com/user-attachments/assets/9decb3b5-3ebe-4928-88e2-f41a69597106" />
+
 
 ### Aufgabenverwaltung
 
@@ -35,7 +36,8 @@ Aufgaben können direkt im Dashboard erstellt und verwaltet werden.
 - Anzeige von Projekt und Milestone, wenn die Aufgabe zu einem Projekt gehört
 - Validierung wichtiger Eingaben und Begrenzung der Textlängen
 
-[Screenshot des Dialogs „Neue Aufgabe hinzufügen"]
+<img width="1616" height="932" alt="grafik" src="https://github.com/user-attachments/assets/a0d52b92-0202-498a-be81-3804abf2b864" />
+
 
 ### Wiederkehrende Aufgaben
 
@@ -48,9 +50,9 @@ Eine Aufgabe kann als Wiederholung angelegt werden. Unterstützt werden:
 - individuell ausgewählte Wochentage
 - optionales Enddatum für die Wiederholung
 
-Die Wiederholungslogik wird anhand des ausgewählten Tages berechnet. Projektaufgaben folgen dagegen ihrer geplanten Tageszuordnung.
+Die Wiederholungslogik wird anhand des ausgewählten Tages berechnet. Projektaufgaben folgen dagegen ihrer geplanten Tageszuordnung.  
+<img width="1630" height="931" alt="grafik" src="https://github.com/user-attachments/assets/10412987-e5ed-4c87-81f9-fd84bdd169a8" />
 
-[Screenshot des Aufgabendialogs mit aktivierter Wiederholung und Wochentagauswahl]
 
 ### Work Mode und Aufgabentimer
 
@@ -68,7 +70,7 @@ Der Work Mode bietet eine fokussierte Ansicht für die aktuell bearbeitete Aufga
 
 Beim Beenden wird die gemessene Zeit zur bereits investierten Zeit der Aufgabe addiert.
 
-[Screenshot des Dashboards mit laufendem Aufgabentimer im Work Mode]
+<img width="1588" height="925" alt="grafik" src="https://github.com/user-attachments/assets/c857c33a-ab17-432f-be36-fbbde2477720" />
 
 ### Projekte
 
@@ -93,9 +95,8 @@ Neue Projekte können mit folgenden Angaben angelegt werden:
 - Start- und Enddatum
 - optionales Projektbild
 
-Das Enddatum darf nicht vor dem Startdatum liegen. Tags können einzeln über die Eingabetaste hinzugefügt und wieder entfernt werden.
-
-[Screenshot der Projektübersicht mit mehreren Projektkarten und Fortschrittsanzeigen]
+Das Enddatum darf nicht vor dem Startdatum liegen. Tags können einzeln über die Eingabetaste hinzugefügt und wieder entfernt werden.  
+<img width="1626" height="925" alt="Chronos_Screenshot_2" src="https://github.com/user-attachments/assets/83327ef9-1e1b-4753-9c19-845873b4723b" />
 
 ### Projektdetails
 
@@ -109,7 +110,7 @@ Ein Projekt besitzt eine eigene Detailansicht mit mehreren Tabs:
 
 Projektaufgaben können ein Fälligkeitsdatum und einen Milestone erhalten. Ihr Fortschritt wird automatisch aus erledigten und offenen Aufgaben berechnet.
 
-[Screenshot der Projekt-Detailansicht im Tab „Aufgaben"]
+<img width="1898" height="928" alt="Chronos_Screenshot_3" src="https://github.com/user-attachments/assets/ad2ca07f-f7fa-4091-a5ab-862b382f095a" />
 
 ### Milestones
 
@@ -123,7 +124,7 @@ Milestones gehören immer zu einem bestimmten Projekt und enthalten:
 
 Beim Löschen eines Milestones kann gewählt werden, ob zugehörige Aufgaben erhalten und nur entkoppelt oder ebenfalls gelöscht werden sollen.
 
-[Screenshot der Milestone-Tabelle mit Status und Fortschrittsbalken]
+<img width="1900" height="917" alt="Chronos_Screenshot_4" src="https://github.com/user-attachments/assets/ad8053af-389f-4332-a125-afcd6453ae14" />
 
 ### Ressourcen und Projektbilder
 
@@ -138,7 +139,7 @@ Die Projektbilder können als lokale Bilddatei eingelesen und als Data-URL im Pr
 
 Die aktuellen Beispielbilder und Dokumente in der Ressourcenansicht sind statische Demo-Daten. Die Upload-Schaltflächen und Dateiablage sind noch nicht an eine persistente Dateiablage angebunden.
 
-[Screenshot der Ressourcenansicht mit Bildergalerie und Dokumentliste]
+<img width="1898" height="932" alt="grafik" src="https://github.com/user-attachments/assets/838e6991-a602-457d-ab56-1f4f504bde8b" />
 
 ### Kategorien und Einstellungen
 
@@ -152,7 +153,7 @@ Unter „Einstellungen“ können globale Projektkategorien verwaltet werden.
 
 Die Navigation besteht aus Dashboard, Projekte und Einstellungen. Das Design verwendet ein dunkles, blau akzentuiertes Farbsystem mit responsiven Karten, Dialogen, Fortschrittsringen und klaren Fokuszuständen für Tastaturbedienung.
 
-[Screenshot der globalen Einstellungen mit Kategorienverwaltung]
+<img width="1900" height="924" alt="grafik" src="https://github.com/user-attachments/assets/bf475037-4d8f-4b65-bbeb-0887d755755d" />
 
 ## Technischer Aufbau
 
